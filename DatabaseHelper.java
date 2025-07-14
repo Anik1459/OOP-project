@@ -1,8 +1,8 @@
-package org.example.java;
+package com.example.oopproject;
 
 import java.sql.*;
 
-public class DatabaseHelper {
+public  class DatabaseHelper {
     private static final String DB_URL = "jdbc:sqlite:user_data.db";
 
     public static void createTableIfNotExists() {
@@ -14,7 +14,9 @@ public class DatabaseHelper {
                 "division TEXT NOT NULL," +
                 "district TEXT NOT NULL," +
                 "thana TEXT NOT NULL," +
-                "password TEXT NOT NULL)";
+                "password TEXT NOT NULL," +
+                "phone TEXT NOT NULL" +
+                ")";
         try (Connection conn = DriverManager.getConnection(DB_URL);
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
@@ -23,10 +25,43 @@ public class DatabaseHelper {
         }
     }
 
+    public static boolean updatePasswordByPhone(String phone, String newPassword) {
+        String sql = "UPDATE users SET password = ? WHERE phone = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, newPassword);
+            pstmt.setString(2, phone);
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    public static boolean validateLogin(String phone, String password) {
+        String sql = "SELECT * FROM users WHERE phone = ? AND password = ?";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, phone);
+            pstmt.setString(2, password);
+
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next(); // returns true if a matching row is found
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+
+
     public static void insertUser(String firstName, String lastName, String gender,
                                   String division, String district, String thana,
-                                  String password) {
-        String sql = "INSERT INTO users(first_name, last_name, gender, division, district, thana, password) VALUES(?, ?, ?, ?, ?, ?, ?)";
+                                  String password , String phone) {
+        String sql = "INSERT INTO users(first_name, last_name, gender, division, district, thana, password , phone) VALUES(?, ?, ?, ?, ?, ?, ? , ?)";
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, firstName);
@@ -36,6 +71,7 @@ public class DatabaseHelper {
             pstmt.setString(5, district);
             pstmt.setString(6, thana);
             pstmt.setString(7, password);
+            pstmt.setString(8, phone);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
