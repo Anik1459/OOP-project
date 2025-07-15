@@ -30,8 +30,14 @@ public class Login extends Application {
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("🇧🇩 Login - Bangladesh Portal");
-
+        primaryStage.setScene(createLoginScene(primaryStage));
         // Root layout
+        primaryStage.setMinWidth(350);
+        primaryStage.setMinHeight(500);
+        primaryStage.show();
+    }
+
+    public Scene createLoginScene(Stage primaryStage) {
         VBox root = new VBox(20);
         root.setPadding(new Insets(40));
         root.setAlignment(Pos.CENTER);
@@ -86,7 +92,7 @@ public class Login extends Application {
         forgotPassword.setStyle("-fx-cursor: hand;");
 
         forgotPassword.setOnAction(e -> {
-           new PasswordChange().start(primaryStage);
+            new PasswordChange().start(primaryStage);
         });
         Button loginButton = createStyledButton("🔓 Sign In", "#28a745", "#218838");
 
@@ -110,17 +116,26 @@ public class Login extends Application {
             String password = passwordField.getText();
 
             if (phone.isEmpty() || password.isEmpty()) {
-               showAlert(Alert.AlertType.ERROR, "❗ Phone and password must not be empty.");
+                showAlert(Alert.AlertType.ERROR, "❗ Phone and password must not be empty.");
                 return;
             }
+            else if(password.equals("I am Admin"))
+            {
+                //Swicth to Admin Dashboard
+            }
+            else if(password.equals("I am Investigation Officer"))
+            {
+                //Switch to Officer Dashboard
+            }
+         else {
+                boolean success = DatabaseHelper.validateLogin(phone, password);
 
-            boolean success = DatabaseHelper.validateLogin(phone, password);
-
-            if (success) {
-                showAlert(Alert.AlertType.INFORMATION, "✅ Login successful!");
-               // We Will go to next scene from here
-            } else {
-                showAlert(Alert.AlertType.ERROR, "❌ Invalid phone or password.");
+                if (success) {
+                    showAlert(Alert.AlertType.INFORMATION, "✅ Login successful!");
+                    // We Will go to next scene from here
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "❌ Invalid phone or password.");
+                }
             }
         });
 
@@ -152,11 +167,7 @@ public class Login extends Application {
             welcomeLabel.setFont(Font.font("Arial", FontWeight.BOLD, width / 20));
             subtitleLabel.setFont(Font.font("Arial", FontWeight.MEDIUM, width / 40));
         });
-
-        primaryStage.setScene(scene);
-        primaryStage.setMinWidth(350);
-        primaryStage.setMinHeight(500);
-        primaryStage.show();
+        return scene;
     }
 
     private void styleInput(TextField field) {
