@@ -18,7 +18,7 @@ import java.util.Objects;
 
 
 public abstract class Crime extends UserDashboard {
-    private static final Map<String, String[]> divisionToDistricts = new HashMap<>();
+    public static final Map<String, String[]> divisionToDistricts = new HashMap<>();
     private static final Map<String, String[]> districtToThanas   = new HashMap<>();
 
 static {
@@ -121,7 +121,7 @@ static  TextArea descriptionArea;
 
 
 
-    private static boolean validateForm() {
+    protected static boolean validateForm() {
         StringBuilder errors = new StringBuilder();
 
         if (thanaCombo.getValue() == null) {
@@ -167,7 +167,7 @@ static  TextArea descriptionArea;
 
         alert.showAndWait();
     }
-    public  static void reportCrime(String crimeType) {
+    public static void reportCrime(String crimeType) {
 
 
         Dialog<String> dialog = new Dialog<>();
@@ -280,88 +280,6 @@ static  TextArea descriptionArea;
 
         dialog.getDialogPane().setContent(scrollPane);
 
-        if(Objects.equals(crimeType, "Robbery"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Fraud"))
-        {
-
-            grid.add(new Label("Description:"), 0, 4);
-
-        }
-        else if(Objects.equals(crimeType, "Theft/Burglary"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Assault"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Vandalism"))
-        {
-
-        }
-        else if(Objects.equals(crimeType , "Drug Offence"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Domestic Violence"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Cybercrime"))
-        {
-
-        }
-        else if(Objects.equals(crimeType , "Traffic Violation"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Harassment"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Identity Theft"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Shoplifting"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Kidnapping"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Arson"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Stalking"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Embezzlement"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Sexual Assault"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Money Laundering"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Extortion"))
-        {
-
-        }
-        else if(Objects.equals(crimeType, "Public Disorder"))
-        {
-
-        }
 
         ButtonType submitType = new ButtonType("Submit Report", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(submitType, ButtonType.CANCEL);
@@ -388,6 +306,88 @@ static  TextArea descriptionArea;
         dialog.showAndWait().ifPresent(result -> {
             if ("submitted".equals(result)) {
                 // Add to case history
+
+                if(Objects.equals(crimeType, "Robbery"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Fraud"))
+                {
+                    Fraud fraud=new Fraud();
+                    return;
+                }
+                else if(Objects.equals(crimeType, "Theft/Burglary"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Assault"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Vandalism"))
+                {
+
+                }
+                else if(Objects.equals(crimeType , "Drug Offence"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Domestic Violence"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Cybercrime"))
+                {
+
+                }
+                else if(Objects.equals(crimeType , "Traffic Violation"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Harassment"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Identity Theft"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Shoplifting"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Kidnapping"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Arson"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Stalking"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Embezzlement"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Sexual Assault"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Money Laundering"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Extortion"))
+                {
+
+                }
+                else if(Objects.equals(crimeType, "Public Disorder"))
+                {
+
+                }
                 UserDashboard.CaseRecord newCase = new UserDashboard.CaseRecord(
                         "CR" + System.currentTimeMillis(),
                         crimeType,
@@ -403,6 +403,8 @@ static  TextArea descriptionArea;
                 alert.setHeaderText("Your report has been submitted successfully");
                 alert.setContentText("Case ID: " + newCase.getCaseId() + "\nYou can track the progress in Case History.");
                 alert.showAndWait();
+
+
             }
         });
     }
