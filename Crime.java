@@ -1,5 +1,9 @@
 package org.example.java;
 
+import javafx.stage.FileChooser;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import java.io.File;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -117,6 +121,8 @@ static TextField timeField;
 static TextField nameField;
 static TextField NIDField;
 static  TextArea descriptionArea;
+static  Button uploadBtn;
+   static File chosen;
    static ComboBox<String> thanaCombo = new ComboBox<>();
 
 
@@ -138,16 +144,20 @@ static  TextArea descriptionArea;
         }
 
         // Validate password
-        if (NIDField.getText().isEmpty()) {
-            errors.append("• NID is required\n");
-        } else if (timeField.getText().isEmpty() ) {
+         if (timeField.getText().isEmpty() ) {
             errors.append("• Enter Appropriate Time\n");
         }
-
+         if(chosen==null) {
+             errors.append("<UNK> ID file is required\n");
+         }
+     if(uploadBtn.getText().isEmpty()){
+                            errors.append("ID is required\n");
+         }
         if (errors.length() > 0) {
             showErrorMessage(errors.toString());
             return false;
         }
+
 
 
         return true;
@@ -223,8 +233,81 @@ static  TextArea descriptionArea;
         descriptionArea.setPrefRowCount(4);
         nameField = new TextField();
         nameField.setPromptText("Your Name (Complainant)");
-        NIDField = new TextField();
-        NIDField.setPromptText("NID");
+
+        Label idTypeLabel = new Label("ID Type:");
+        idTypeLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+        ComboBox<String> idTypeCombo = new ComboBox<>();
+        idTypeCombo.getItems().addAll(
+                "NID (13/17 digits)",
+                "Birth Certificate",
+                "Passport"
+        );
+        idTypeCombo.setPromptText("Select ID");
+
+// 2) A button to open a FileChooser
+        Label fileLabel = new Label("No file chosen");
+        uploadBtn = new Button("Upload Photo…");
+        uploadBtn.setOnAction(e -> {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Select ID Photo");
+            chooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Image Files", "*.png","*.jpg","*.jpeg")
+            );
+             chosen = chooser.showOpenDialog(dialog.getOwner());
+            if (chosen != null) {
+                fileLabel.setText(chosen.getName());
+                // You can store `chosen` somewhere or read its bytes as needed
+            }
+        });
+
+        // Father’s Name
+        Label fatherLabel = new Label("Father's Name:");
+        fatherLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+        TextField fatherField = new TextField();
+        fatherField.setPromptText("Father's full name");
+        grid.add(fatherLabel,     0, 12);
+        grid.add(fatherField,     1, 12);
+
+// Mother’s Name
+        Label motherLabel = new Label("Mother's Name:");
+        motherLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+        TextField motherField = new TextField();
+        motherField.setPromptText("Mother's full name");
+        grid.add(motherLabel,     0, 13);
+        grid.add(motherField,     1, 13);
+
+// Phone Number
+        Label phoneLabel = new Label("Phone Number:");
+        phoneLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+        TextField phoneField = new TextField();
+        phoneField.setPromptText("e.g. +8801XXXXXXXXX");
+        grid.add(phoneLabel,      0, 14);
+        grid.add(phoneField,      1, 14);
+
+// Accused (Probable) Name
+        Label accNameLabel = new Label("Accused Name:");
+        accNameLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+        TextField accNameField = new TextField();
+        accNameField.setPromptText("Name of accused (if known)");
+        grid.add(accNameLabel,    0, 15);
+        grid.add(accNameField,    1, 15);
+
+// Accused (Probable) Address
+        Label accAddrLabel = new Label("Accused Address:");
+        accAddrLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+        TextArea accAddrArea = new TextArea();
+        accAddrArea.setPromptText("Last known address of accused");
+        accAddrArea.setPrefRowCount(2);
+        grid.add(accAddrLabel,    0, 16);
+        grid.add(accAddrArea,     1, 16);
+
+// 3) Add into your GridPane (at rows 8 and 9 for example)
+        grid.add(idTypeLabel, 0, 8);
+        grid.add(idTypeCombo, 1, 8);
+
+        grid.add(uploadBtn,   0, 9);
+        grid.add(fileLabel,   1, 9);
+
 
 // (You’ll want to populate divisionCombo.getItems() with your divisions,
 // then on divisionCombo.setOnAction(...) fill districtCombo based on the selected division,
@@ -265,8 +348,7 @@ static  TextArea descriptionArea;
         grid.add(descriptionArea, 1, 5);
         grid.add(nameLabel, 0, 6);
         grid.add(nameField, 1, 6);
-        grid.add(nidLabel, 0, 7);
-        grid.add(NIDField, 1, 7);
+
 
 // **Debug: Add a visible border to GridPane**
         grid.setStyle("-fx-border-color: blue; -fx-border-width: 2px;");
@@ -309,7 +391,8 @@ static  TextArea descriptionArea;
 
                 if(Objects.equals(crimeType, "Robbery"))
                 {
-
+                    Robbery robbery=new Robbery();
+                    return;
                 }
                 else if(Objects.equals(crimeType, "Fraud"))
                 {
@@ -334,7 +417,8 @@ static  TextArea descriptionArea;
                 }
                 else if(Objects.equals(crimeType, "Domestic Violence"))
                 {
-
+                    DomesticViolence domesticViolence=new DomesticViolence();
+                    return;
                 }
                 else if(Objects.equals(crimeType, "Cybercrime"))
                 {
@@ -358,7 +442,8 @@ static  TextArea descriptionArea;
                 }
                 else if(Objects.equals(crimeType, "Kidnapping"))
                 {
-
+                    Kidnapping kidnapping=new Kidnapping();
+                    return;
                 }
                 else if(Objects.equals(crimeType, "Arson"))
                 {
@@ -378,15 +463,18 @@ static  TextArea descriptionArea;
                 }
                 else if(Objects.equals(crimeType, "Money Laundering"))
                 {
-
+                    MoneyLaundaring  moneyLaundaring=new MoneyLaundaring();
+                    return;
                 }
                 else if(Objects.equals(crimeType, "Extortion"))
                 {
-
+                    Extortion extortion=new Extortion();
+                    return;
                 }
                 else if(Objects.equals(crimeType, "Public Disorder"))
                 {
-
+                    PublicDisorder publicDisorder=new PublicDisorder();
+                    return;
                 }
                 UserDashboard.CaseRecord newCase = new UserDashboard.CaseRecord(
                         "CR" + System.currentTimeMillis(),
