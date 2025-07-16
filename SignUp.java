@@ -1,4 +1,4 @@
-package com.example.oopproject;
+package org.example.java;
 
 
 import javafx.application.Application;
@@ -60,7 +60,7 @@ public class SignUp extends Application {
         DatabaseHelper.createTableIfNotExists();
         initializeLocationData();
 
-        primaryStage.setTitle("🇧🇩 Bangladesh Sign Up Portal");
+        primaryStage.setTitle("Safe Bangla Sign Up Portal");
 
         // Create animated background
         VBox root = new VBox();
@@ -201,7 +201,7 @@ public class SignUp extends Application {
         phoneField = createStyledTextField("Enter your phone number", "📞");
         // nice blue color for phone input
         grid.add(phoneLabel, 0, 11);
-        grid.add(phoneField, 1, 12);
+        grid.add(phoneField, 1, 11);
         // Buttons with hover effects
         signUpButton = createStyledButton("🚀 Sign Up", "#4CAF50", "#45A049");
         clearButton = createStyledButton("🗑️ Clear", "#FF5722", "#E64A19");
@@ -218,8 +218,16 @@ public class SignUp extends Application {
         fadeIn.setFromValue(0.0);
         fadeIn.setToValue(1.0);
         fadeIn.play();
+        ScrollPane scrollPane = new ScrollPane(mainContainer);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS); // Always show vertical scrollbar
 
-        root.getChildren().add(mainContainer);
+        root.getChildren().add(scrollPane);
+
+
+
+
 
         // Event handlers
         setupEventHandlers();
