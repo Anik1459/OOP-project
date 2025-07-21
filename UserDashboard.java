@@ -1,4 +1,4 @@
-package org.example.java;
+package src.main;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -134,7 +134,7 @@ public class UserDashboard extends Application {
             crimeBtn.setOnMouseExited(e -> crimeBtn.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; " +
                     "-fx-font-size: 12px; -fx-background-radius: 10;"));
 
-            crimeBtn.setOnAction(e -> Crime.reportCrime(crime));
+            crimeBtn.setOnAction(e -> reportCrime(crime));
 
             crimeGrid.add(crimeBtn, col, row);
             col++;
@@ -303,69 +303,12 @@ public class UserDashboard extends Application {
 
     private void reportCrime(String crimeType) {
         // Create crime reporting dialog
-        Dialog<String> dialog = new Dialog<>();
-        dialog.setTitle("Report " + crimeType);
-        dialog.setHeaderText("Please provide details about the incident");
-
-        // Create form
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20));
-
-        TextField locationField = new TextField();
-        locationField.setPromptText("Location of incident");
-
-        DatePicker datePicker = new DatePicker();
-
-        TextField timeField = new TextField();
-        timeField.setPromptText("Time (e.g., 14:30)");
-
-        TextArea descriptionArea = new TextArea();
-        descriptionArea.setPromptText("Detailed description of the incident");
-        descriptionArea.setPrefRowCount(4);
-
-        grid.add(new Label("Location:"), 0, 0);
-        grid.add(locationField, 1, 0);
-        grid.add(new Label("Date:"), 0, 1);
-        grid.add(datePicker, 1, 1);
-        grid.add(new Label("Time:"), 0, 2);
-        grid.add(timeField, 1, 2);
-        grid.add(new Label("Description:"), 0, 3);
-        grid.add(descriptionArea, 1, 3);
-
-        dialog.getDialogPane().setContent(grid);
-
-        ButtonType submitButton = new ButtonType("Submit Report", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(submitButton, ButtonType.CANCEL);
-
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == submitButton) {
-                return "submitted";
-            }
-            return null;
-        });
-
-        dialog.showAndWait().ifPresent(result -> {
-            if ("submitted".equals(result)) {
-                // Add to case history
-                CaseRecord newCase = new CaseRecord(
-                        "CR" + System.currentTimeMillis(),
-                        crimeType,
-                        locationField.getText(),
-                        LocalDateTime.now(),
-                        "Under Investigation"
-                );
-                caseHistory.add(0, newCase);
-
-                // Show confirmation
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Report Submitted");
-                alert.setHeaderText("Your report has been submitted successfully");
-                alert.setContentText("Case ID: " + newCase.getCaseId() + "\nYou can track the progress in Case History.");
-                alert.showAndWait();
-            }
-        });
+        if(crimeType.equals("Fraud"))
+        {
+            new Fraud().absMethod();
+        } else if (crimeType.equals("Robbery")) {
+            new Robbery().absMethod();
+        }
     }
 
     private void simulateCall(String number) {
