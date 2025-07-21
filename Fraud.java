@@ -1,189 +1,487 @@
 package src.main;
 
-import com.example.demo1.Crime;
-import com.example.demo1.UserDashboard;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import java.time.LocalDateTime;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.stage.Stage;
 
 public class Fraud extends Crime {
 
-    public Fraud() {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Report Fraud");
-        dialog.setHeaderText("Please provide details about the incident");
+    @Override
+    public void absMethod() {
+        // Create main container
+        VBox mainContainer = new VBox();
+        mainContainer.setStyle(
+                "-fx-background-color: linear-gradient(to bottom, #f8f9fa, #e9ecef);" +
+                        "-fx-padding: 0;"
+        );
 
-        GridPane grid = new GridPane();
-        grid.setHgap(12);
-        grid.setVgap(12);
-        grid.setPadding(new Insets(20));
-        int row = 0;
+        // Header Section
+        VBox headerSection = createHeaderSection();
+
+        // Form Section
+        GridPane formGrid = buildForm();
+        formGrid.setVgap(15);
+        formGrid.setHgap(20);
+        formGrid.setPadding(new Insets(30, 40, 30, 40));
+        formGrid.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 2);"
+        );
+
+        // Wrap form in a container with padding
+        VBox formContainer = new VBox(formGrid);
+        formContainer.setPadding(new Insets(20, 30, 30, 30));
+
+        int row = formGrid.getRowCount();
 
         // 1. Type of Fraud
-        grid.add(new Label("Type of Fraud:"), 0, row);
-        ComboBox<String> fraudTypeBox = new ComboBox<>();
+        Label typeLabel = createStyledLabel("💰 Type of Fraud *:", true);
+        ComboBox<String> fraudTypeBox = createStyledComboBox();
         fraudTypeBox.getItems().addAll(
-                "Financial Fraud",
-                "Land/Property Fraud",
-                "Job Scam",
-                "Online Scam",
-                "Bank/Cheque Fraud",
-                "Identity Fraud",
+                "Financial fraud",
+                "Land/Property fraud",
+                "Job scam",
+                "Online scam",
+                "Bank/Cheque fraud",
+                "Identity fraud",
                 "Other"
         );
-        fraudTypeBox.setPrefWidth(300);
-        grid.add(fraudTypeBox, 1, row++);
+        fraudTypeBox.setPromptText("Select fraud type");
 
-        TextField fraudOtherField = new TextField();
-        fraudOtherField.setPromptText("If other, specify...");
-        fraudOtherField.setDisable(true);
-        grid.add(fraudOtherField, 1, row++);
+        TextField otherFraudField = createStyledTextField();
+        otherFraudField.setPromptText("If 'Other', specify here");
+        otherFraudField.setDisable(true);
 
         fraudTypeBox.setOnAction(e -> {
-            fraudOtherField.setDisable(!fraudTypeBox.getValue().contains("Other"));
+            String selected = fraudTypeBox.getValue();
+            otherFraudField.setDisable(selected == null || !selected.equals("Other"));
         });
 
+        formGrid.add(typeLabel, 0, row);
+        formGrid.add(fraudTypeBox, 1, row++);
+        formGrid.add(otherFraudField, 1, row++);
+
         // 2. Mode of Communication
-        grid.add(new Label("Mode of Communication:"), 0, row);
-        VBox commModes = new VBox(5);
-        CheckBox phone = new CheckBox("Phone Call");
-        CheckBox sms = new CheckBox("SMS/Message");
-        CheckBox whatsapp = new CheckBox("WhatsApp/Facebook");
-        CheckBox email = new CheckBox("Email");
-        CheckBox inPerson = new CheckBox("In-person Meeting");
-        CheckBox commOther = new CheckBox("Other");
-        commModes.getChildren().addAll(phone, sms, whatsapp, email, inPerson, commOther);
-        grid.add(commModes, 1, row++);
+        Label commLabel = createStyledLabel("📞 Mode of Communication *:", true);
+        CheckBox phoneCB = createStyledCheckBox("Phone Call");
+        CheckBox smsCB = createStyledCheckBox("SMS/Message");
+        CheckBox socialCB = createStyledCheckBox("WhatsApp/Facebook");
+        CheckBox emailCB = createStyledCheckBox("Email");
+        CheckBox meetCB = createStyledCheckBox("In-person Meeting");
+        CheckBox otherCommCB = createStyledCheckBox("Other");
+
+        GridPane commPane = new GridPane();
+        commPane.setHgap(15);
+        commPane.setVgap(8);
+        commPane.addRow(0, phoneCB, smsCB, socialCB);
+        commPane.addRow(1, emailCB, meetCB, otherCommCB);
+
+        formGrid.add(commLabel, 0, row);
+        formGrid.add(commPane, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
 
         // 3. Financial Transaction
-        grid.add(new Label("Was there a financial transaction?"), 0, row);
-        ToggleGroup transactionGroup = new ToggleGroup();
-        RadioButton yesTrans = new RadioButton("Yes");
-        RadioButton noTrans = new RadioButton("No");
-        yesTrans.setToggleGroup(transactionGroup);
-        noTrans.setToggleGroup(transactionGroup);
-        HBox transactionBox = new HBox(15, yesTrans, noTrans);
-        grid.add(transactionBox, 1, row++);
+        Label transLabel = createStyledLabel("💳 Was a financial transaction involved?", false);
+        ToggleGroup transGroup = new ToggleGroup();
+        RadioButton yesTrans = createStyledRadioButton("Yes");
+        RadioButton noTrans = createStyledRadioButton("No");
+        yesTrans.setToggleGroup(transGroup);
+        noTrans.setToggleGroup(transGroup);
 
-        TextField amountField = new TextField();
+        HBox transBox = new HBox(20, yesTrans, noTrans);
+        formGrid.add(transLabel, 0, row);
+        formGrid.add(transBox, 1, row++);
+
+        Label amountLabel = createStyledLabel("💵 Transaction Amount:", false);
+        TextField amountField = createStyledTextField();
         amountField.setPromptText("Amount in BDT");
-        TextField methodField = new TextField();
-        methodField.setPromptText("Cash, Bkash, Bank Transfer, etc.");
         amountField.setDisable(true);
-        methodField.setDisable(true);
-        grid.add(new Label("Transaction Amount:"), 0, row);
-        grid.add(amountField, 1, row++);
-        grid.add(new Label("Transaction Method:"), 0, row);
-        grid.add(methodField, 1, row++);
+
+        Label methodLabel = createStyledLabel("🏦 Transaction Method:", false);
+        ComboBox<String> methodBox = createStyledComboBox();
+        methodBox.getItems().addAll("Cash", "bKash", "Bank Transfer");
+        methodBox.setDisable(true);
 
         yesTrans.setOnAction(e -> {
             amountField.setDisable(false);
-            methodField.setDisable(false);
+            methodBox.setDisable(false);
         });
         noTrans.setOnAction(e -> {
-            amountField.clear();
-            methodField.clear();
             amountField.setDisable(true);
-            methodField.setDisable(true);
+            methodBox.setDisable(true);
         });
+
+        formGrid.add(amountLabel, 0, row);
+        formGrid.add(amountField, 1, row++);
+        formGrid.add(methodLabel, 0, row);
+        formGrid.add(methodBox, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
 
         // 4. Supporting Documents
-        grid.add(new Label("Supporting Documents:"), 0, row);
-        VBox docsBox = new VBox(5);
-        CheckBox contract = new CheckBox("Contract or Agreement");
-        CheckBox receipt = new CheckBox("Receipt/Bill");
-        CheckBox bank = new CheckBox("Bank Statement");
-        CheckBox cheque = new CheckBox("Cheque/Promissory Note");
-        CheckBox chats = new CheckBox("Chat Screenshots");
-        CheckBox media = new CheckBox("Photo/Video Evidence");
-        CheckBox witness = new CheckBox("Witness Statement");
-        docsBox.getChildren().addAll(contract, receipt, bank, cheque, chats, media, witness);
-        grid.add(docsBox, 1, row++);
+        Label docLabel = createStyledLabel("📋 Supporting Documents:", false);
+        CheckBox doc1 = createStyledCheckBox("Contract/Agreement");
+        CheckBox doc2 = createStyledCheckBox("Receipt/Bill");
+        CheckBox doc3 = createStyledCheckBox("Bank Statement");
+        CheckBox doc4 = createStyledCheckBox("Cheque/Promissory Note");
+        CheckBox doc5 = createStyledCheckBox("Chat/Screenshot");
+        CheckBox doc6 = createStyledCheckBox("Video/Photo");
+        CheckBox doc7 = createStyledCheckBox("Witness Statement");
 
-        // 5. Did the accused promise to return?
-        grid.add(new Label("Did the accused promise to return or resolve?"), 0, row);
+        GridPane docPane = new GridPane();
+        docPane.setHgap(15);
+        docPane.setVgap(8);
+        docPane.addRow(0, doc1, doc2, doc3);
+        docPane.addRow(1, doc4, doc5);
+        docPane.addRow(2, doc6, doc7);
+
+        formGrid.add(docLabel, 0, row);
+        formGrid.add(docPane, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 5. Accused promise
+        Label promiseLabel = createStyledLabel("🤝 Has the accused promised to return?", false);
         ToggleGroup promiseGroup = new ToggleGroup();
-        RadioButton promisedYes = new RadioButton("Yes");
-        RadioButton promisedNo = new RadioButton("No");
-        promisedYes.setToggleGroup(promiseGroup);
-        promisedNo.setToggleGroup(promiseGroup);
-        HBox promiseBox = new HBox(15, promisedYes, promisedNo);
-        grid.add(promiseBox, 1, row++);
+        RadioButton yesPromise = createStyledRadioButton("Yes");
+        RadioButton noPromise = createStyledRadioButton("No");
+        yesPromise.setToggleGroup(promiseGroup);
+        noPromise.setToggleGroup(promiseGroup);
 
-        // 6. Reported elsewhere?
-        grid.add(new Label("Have you reported this elsewhere?"), 0, row);
-        ToggleGroup reportGroup = new ToggleGroup();
-        RadioButton reportedYes = new RadioButton("Yes, reported before");
-        RadioButton reportedNo = new RadioButton("No, first time");
-        reportedYes.setToggleGroup(reportGroup);
-        reportedNo.setToggleGroup(reportGroup);
-        HBox reportBox = new HBox(15, reportedYes, reportedNo);
-        grid.add(reportBox, 1, row++);
+        HBox promiseBox = new HBox(20, yesPromise, noPromise);
+        formGrid.add(promiseLabel, 0, row);
+        formGrid.add(promiseBox, 1, row++);
 
-        // 7. What action do you want from police?
-        grid.add(new Label("What action do you seek from police?"), 0, row);
-        TextArea actionArea = new TextArea();
-        actionArea.setPromptText("e.g., I want legal action against the accused.");
-        actionArea.setPrefRowCount(3);
-        grid.add(actionArea, 1, row++);
+        // 6. Previously reported
+        Label reportedLabel = createStyledLabel("📝 Has this fraud been reported elsewhere?", false);
+        ToggleGroup reportedGroup = new ToggleGroup();
+        RadioButton yesReported = createStyledRadioButton("Yes, reported earlier");
+        RadioButton noReported = createStyledRadioButton("No, first time");
+        yesReported.setToggleGroup(reportedGroup);
+        noReported.setToggleGroup(reportedGroup);
 
-        // ScrollPane
-        ScrollPane scroll = new ScrollPane(grid);
-        scroll.setFitToWidth(true);
-        scroll.setPadding(new Insets(10));
-        scroll.setPrefViewportHeight(700);
-        scroll.setPrefViewportWidth(700);
-        dialog.getDialogPane().setPrefSize(800, 750); // Optional: sets the dialog pane size
+        HBox reportedBox = new HBox(20, yesReported, noReported);
+        formGrid.add(reportedLabel, 0, row);
+        formGrid.add(reportedBox, 1, row++);
 
-        dialog.getDialogPane().setContent(scroll);
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 7. Action from police
+        Label actionLabel = createStyledLabel("🚔 What action are you seeking from police?", false);
+        TextArea actionArea = createStyledTextArea();
+        actionArea.setPromptText("Describe the action you want from the police...");
+        actionArea.setPrefRowCount(4);
+
+        formGrid.add(actionLabel, 0, row);
+        formGrid.add(actionArea, 1, row++);
+
+        // Add spacing before buttons
+        formGrid.add(new Label(""), 0, row++);
 
         // Buttons
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        Button submitBtn = createStyledButton("📤 Submit Report", true);
+        Button clearBtn = createStyledButton("🗑️ Clear Form", false);
 
-        dialog.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
+        HBox buttonBox = new HBox(15, submitBtn, clearBtn);
+        buttonBox.setAlignment(Pos.CENTER);
+        formGrid.add(buttonBox, 1, row++);
 
-                // Basic validation
-                if (fraudTypeBox.getValue() == null ||
-                        (fraudTypeBox.getValue().contains("Other") && fraudOtherField.getText().trim().isEmpty())) {
-                    showError("Please select or enter the type of fraud.");
-                    return;
-                }
-
-                if (transactionGroup.getSelectedToggle() == yesTrans &&
-                        (amountField.getText().isEmpty() || methodField.getText().isEmpty())) {
-                    showError("Please enter transaction amount and method.");
-                    return;
-                }
-
-                if (actionArea.getText().trim().isEmpty()) {
-                    showError("Please describe what action you seek from police.");
-                    return;
-                }
-
-                // Save simple record
-                UserDashboard.CaseRecord newCase = new UserDashboard.CaseRecord(
-                        "CR" + System.currentTimeMillis(),
-                        "Fraud",
-                        fraudTypeBox.getValue(),
-                        LocalDateTime.now(),
-                        "Under Investigation"
-                );
-
-                Alert info = new Alert(Alert.AlertType.INFORMATION);
-                info.setTitle("Report Submitted");
-                info.setHeaderText("Your report has been submitted successfully");
-                info.setContentText("Case ID: " + newCase.getCaseId());
-                info.showAndWait();
+        // Submit button logic
+        submitBtn.setOnAction(e -> {
+            if (!validateCommonFields()) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please fill all required common fields.");
+                return;
             }
+            if (fraudTypeBox.getValue() == null ||
+                    (!phoneCB.isSelected() && !smsCB.isSelected() && !socialCB.isSelected() && !emailCB.isSelected() && !meetCB.isSelected() && !otherCommCB.isSelected())) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please fill all mandatory fields (Type of Fraud and Mode of Communication).");
+                return;
+            }
+            if (fraudTypeBox.getValue().equals("Other") && otherFraudField.getText().isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please specify the 'Other' fraud type.");
+                return;
+            }
+            showAlert(Alert.AlertType.INFORMATION, "Success", "Fraud report submitted successfully!");
         });
+
+        // Clear button logic
+        clearBtn.setOnAction(e -> {
+            fraudTypeBox.setValue(null);
+            otherFraudField.clear();
+            phoneCB.setSelected(false);
+            smsCB.setSelected(false);
+            socialCB.setSelected(false);
+            emailCB.setSelected(false);
+            meetCB.setSelected(false);
+            otherCommCB.setSelected(false);
+            transGroup.selectToggle(null);
+            amountField.clear();
+            amountField.setDisable(true);
+            methodBox.setValue(null);
+            methodBox.setDisable(true);
+            doc1.setSelected(false);
+            doc2.setSelected(false);
+            doc3.setSelected(false);
+            doc4.setSelected(false);
+            doc5.setSelected(false);
+            doc6.setSelected(false);
+            doc7.setSelected(false);
+            promiseGroup.selectToggle(null);
+            reportedGroup.selectToggle(null);
+            actionArea.clear();
+        });
+
+        // Add header and form to main container
+        mainContainer.getChildren().addAll(headerSection, formContainer);
+
+        // Wrap the main container in ScrollPane
+        ScrollPane scrollPane = new ScrollPane(mainContainer);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setStyle("-fx-background-color: #f8f9fa;");
+
+        Scene scene = new Scene(scrollPane, 900, 750);
+        Stage stage = new Stage();
+        stage.setTitle("Fraud Case Report - Bangladesh Police");
+        stage.setScene(scene);
+        stage.show();
     }
 
-    private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Form Validation Error");
+    private VBox createHeaderSection() {
+        VBox header = new VBox(10);
+        header.setAlignment(Pos.CENTER);
+        header.setPadding(new Insets(25, 20, 25, 20));
+        header.setStyle(
+                "-fx-background-color: linear-gradient(to bottom, #2c3e50, #34495e);" +
+                        "-fx-border-color: #1a252f;" +
+                        "-fx-border-width: 0 0 3 0;"
+        );
+
+        // Main title with emoji
+        Label titleLabel = new Label("🚨 FRAUD CASE REPORT 🚨");
+        titleLabel.setStyle(
+                "-fx-font-family: 'System Bold', Arial;" +
+                        "-fx-font-size: 32px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-text-fill: #ffffff;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 3, 0, 2, 2);"
+        );
+
+        Label subtitleLabel = new Label("🏛️ Bangladesh Police Crime Reporting System");
+        subtitleLabel.setStyle(
+                "-fx-font-family: Arial;" +
+                        "-fx-font-size: 18px;" +
+                        "-fx-text-fill: #ecf0f1;" +
+                        "-fx-font-weight: bold;"
+        );
+
+        // Info section with better styling
+        VBox infoBox = new VBox(8);
+        infoBox.setAlignment(Pos.CENTER);
+        infoBox.setPadding(new Insets(20, 0, 0, 0));
+        infoBox.setStyle(
+                "-fx-background-color: rgba(52, 73, 94, 0.7);" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-padding: 15;"
+        );
+
+        Label infoTitle = new Label("⚠️ Important Information about Fraud Cases:");
+        infoTitle.setStyle(
+                "-fx-font-family: Arial;" +
+                        "-fx-font-size: 15px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-text-fill: #f39c12;"
+        );
+
+        Label infoText = new Label(
+                "📅 Report fraud cases within 24-48 hours for better investigation\n" +
+                        "📄 Keep all evidence and documents safe\n" +
+                        "📞 Provide accurate contact information for follow-up\n" +
+                        "🚨 Emergency Fraud Hotline: 999 | 💬 Anti-Fraud Helpline: 16263"
+        );
+        infoText.setStyle(
+                "-fx-font-family: Arial;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-text-fill: #bdc3c7;" +
+                        "-fx-line-spacing: 4px;"
+        );
+
+        infoBox.getChildren().addAll(infoTitle, infoText);
+        header.getChildren().addAll(titleLabel, subtitleLabel, infoBox);
+
+        return header;
+    }
+
+    private Label createStyledLabel(String text, boolean required) {
+        Label label = new Label(text);
+        String baseStyle =
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-font-weight: " + (required ? "bold" : "normal") + ";" +
+                        "-fx-text-fill: " + (required ? "#d32f2f" : "#424242") + ";";
+        label.setStyle(baseStyle);
+        return label;
+    }
+
+    private TextField createStyledTextField() {
+        TextField field = new TextField();
+        field.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;" +
+                        "-fx-padding: 8px 12px;"
+        );
+        field.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                field.setStyle(field.getStyle() + "-fx-border-color: #2196f3; -fx-border-width: 2px;");
+            } else {
+                field.setStyle(field.getStyle().replace("-fx-border-color: #2196f3; -fx-border-width: 2px;", ""));
+            }
+        });
+        return field;
+    }
+
+    private TextArea createStyledTextArea() {
+        TextArea area = new TextArea();
+        area.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;" +
+                        "-fx-padding: 8px 12px;"
+        );
+        area.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                area.setStyle(area.getStyle() + "-fx-border-color: #2196f3; -fx-border-width: 2px;");
+            } else {
+                area.setStyle(area.getStyle().replace("-fx-border-color: #2196f3; -fx-border-width: 2px;", ""));
+            }
+        });
+        return area;
+    }
+
+    private ComboBox<String> createStyledComboBox() {
+        ComboBox<String> combo = new ComboBox<>();
+        combo.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;"
+        );
+        combo.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                combo.setStyle(combo.getStyle() + "-fx-border-color: #2196f3; -fx-border-width: 2px;");
+            } else {
+                combo.setStyle(combo.getStyle().replace("-fx-border-color: #2196f3; -fx-border-width: 2px;", ""));
+            }
+        });
+        return combo;
+    }
+
+    private CheckBox createStyledCheckBox(String text) {
+        CheckBox checkBox = new CheckBox(text);
+        checkBox.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 12px;" +
+                        "-fx-text-fill: #424242;"
+        );
+        return checkBox;
+    }
+
+    private RadioButton createStyledRadioButton(String text) {
+        RadioButton radio = new RadioButton(text);
+        radio.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 12px;" +
+                        "-fx-text-fill: #424242;"
+        );
+        return radio;
+    }
+
+    private Button createStyledButton(String text, boolean primary) {
+        Button button = new Button(text);
+        String baseStyle =
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 14px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-padding: 10px 25px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;" +
+                        "-fx-cursor: hand;";
+
+        if (primary) {
+            button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #4caf50, #45a049);" +
+                    "-fx-text-fill: white;" +
+                    "-fx-border-color: #4caf50;"
+            );
+            button.setOnMouseEntered(e -> button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #45a049, #3d8b40);" +
+                    "-fx-text-fill: white;" +
+                    "-fx-border-color: #45a049;"
+            ));
+            button.setOnMouseExited(e -> button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #4caf50, #45a049);" +
+                    "-fx-text-fill: white;" +
+                    "-fx-border-color: #4caf50;"
+            ));
+        } else {
+            button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #f5f5f5, #e0e0e0);" +
+                    "-fx-text-fill: #424242;" +
+                    "-fx-border-color: #bdbdbd;"
+            );
+            button.setOnMouseEntered(e -> button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #e0e0e0, #d0d0d0);" +
+                    "-fx-text-fill: #424242;" +
+                    "-fx-border-color: #9e9e9e;"
+            ));
+            button.setOnMouseExited(e -> button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #f5f5f5, #e0e0e0);" +
+                    "-fx-text-fill: #424242;" +
+                    "-fx-border-color: #bdbdbd;"
+            ));
+        }
+
+        return button;
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
         alert.setContentText(message);
+
+        // Style the alert dialog
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;"
+        );
+
         alert.showAndWait();
     }
 }
