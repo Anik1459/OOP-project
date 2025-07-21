@@ -1,486 +1,487 @@
-package org.example.java;
+package src.main;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
+import javafx.scene.layout.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.stage.Stage;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
 
 public class Robbery extends Crime {
 
-    private ComboBox<String> robberyTypeCombo;
-    private ComboBox<String> weaponUsedCombo;
-    private TextField numberOfRobbersField;
-    private TextArea robbersDescriptionArea;
-    private TextArea itemsStolenArea;
-    private TextField totalValueField;
-    private ComboBox<String> vehicleUsedCombo;
-    private TextField vehicleDetailsField;
-    private ComboBox<String> injuryStatusCombo;
-    private TextArea injuryDetailsArea;
-    private ComboBox<String> witnessAvailableCombo;
-    private TextArea witnessDetailsArea;
-    private ComboBox<String> securityCameraCombo;
-    private TextArea incidentDescriptionArea;
-    private TextField suspectKnownField;
-    private ComboBox<String> policeNotifiedCombo;
-    private ComboBox<String> timeOfDayCombo;
-    private ComboBox<String> lightingConditionCombo;
-    private TextField crowdLevelField;
-    private ComboBox<String> helpRequestedCombo;
-    private TextArea additionalInfoArea;
-
-    public Robbery() {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Robbery Report - Bangladesh Police");
-        dialog.setHeaderText("দস্যুতার ঘটনার বিবরণ দিন / Please provide details about the robbery incident");
-
-        // Build form grid
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20));
-
-        int row = 0;
-
-        // Incident Details
-        Label incidentSectionLabel = new Label("Incident Details");
-        incidentSectionLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-        grid.add(incidentSectionLabel, 0, row++, 2, 1);
-
-        Label robberyTypeLabel = new Label("Type of Robbery/দস্যুতার ধরন:*");
-        robberyTypeCombo = new ComboBox<>();
-        robberyTypeCombo.getItems().addAll(
-                "Street Robbery / রাস্তার দস্যুতা",
-                "Home Invasion / বাড়িতে দস্যুতা",
-                "Shop/Business Robbery / দোকান/ব্যবসায়িক দস্যুতা",
-                "Bank Robbery / ব্যাংক ডাকাতি",
-                "Vehicle Hijacking / যানবাহন ছিনতাই",
-                "Mobile/Chain Snatching / মোবাইল/চেইন ছিনতাই",
-                "ATM Robbery / এটিএম ডাকাতি",
-                "Other / অন্যান্য"
+    @Override
+    public void absMethod() {
+        // Create main container
+        VBox mainContainer = new VBox();
+        mainContainer.setStyle(
+                "-fx-background-color: linear-gradient(to bottom, #f8f9fa, #e9ecef);" +
+                        "-fx-padding: 0;"
         );
-        robberyTypeCombo.setPromptText("Select type of robbery");
-        grid.add(robberyTypeLabel, 0, row);
-        grid.add(robberyTypeCombo, 1, row++);
 
-        Label timeOfDayLabel = new Label("Time of Day / দিনের সময়:*");
-        timeOfDayCombo = new ComboBox<>();
-        timeOfDayCombo.getItems().addAll(
-                "Early Morning (5AM-8AM) / ভোর (৫-৮টা)",
-                "Morning (8AM-12PM) / সকাল (৮-১২টা)",
-                "Afternoon (12PM-4PM) / দুপুর (১২-৪টা)",
-                "Evening (4PM-8PM) / সন্ধ্যা (৪-৮টা)",
-                "Night (8PM-12AM) / রাত (৮-১২টা)",
-                "Late Night (12AM-5AM) / গভীর রাত (১২-৫টা)"
+        // Header Section
+        VBox headerSection = createHeaderSection();
+
+        // Form Section
+        GridPane formGrid = buildForm();
+        formGrid.setVgap(15);
+        formGrid.setHgap(20);
+        formGrid.setPadding(new Insets(30, 40, 30, 40));
+        formGrid.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 2);"
         );
-        timeOfDayCombo.setPromptText("Select time period");
-        grid.add(timeOfDayLabel, 0, row);
-        grid.add(timeOfDayCombo, 1, row++);
 
-        Label lightingLabel = new Label("Lighting Condition / আলোর অবস্থা:*");
-        lightingConditionCombo = new ComboBox<>();
-        lightingConditionCombo.getItems().addAll(
-                "Bright Daylight / উজ্জ্বল দিন",
-                "Street Light / রাস্তার বাতি",
-                "Dim Light / অস্পষ্ট আলো",
-                "Dark / অন্ধকার"
+        // Wrap form in a container with padding
+        VBox formContainer = new VBox(formGrid);
+        formContainer.setPadding(new Insets(20, 30, 30, 30));
+
+        int row = formGrid.getRowCount();
+
+        // 1. Location of robbery
+        Label locationLabel = createStyledLabel("📍 Where exactly did the robbery happen? *", true);
+        TextField locationField = createStyledTextField();
+        locationField.setPromptText("Location details");
+        formGrid.add(locationLabel, 0, row);
+        formGrid.add(locationField, 1, row++);
+
+        // 2. Armed or unarmed
+        Label armedLabel = createStyledLabel("🔫 Was the robbery armed or unarmed? *", true);
+        ToggleGroup armedGroup = new ToggleGroup();
+        RadioButton armedYes = createStyledRadioButton("Armed");
+        RadioButton armedNo = createStyledRadioButton("Unarmed");
+        armedYes.setToggleGroup(armedGroup);
+        armedNo.setToggleGroup(armedGroup);
+
+        TextField weaponTypeField = createStyledTextField();
+        weaponTypeField.setPromptText("What kind of weapon?");
+        weaponTypeField.setDisable(true);
+
+        armedYes.setOnAction(e -> weaponTypeField.setDisable(false));
+        armedNo.setOnAction(e -> {
+            weaponTypeField.clear();
+            weaponTypeField.setDisable(true);
+        });
+
+        formGrid.add(armedLabel, 0, row);
+        HBox armedBox = new HBox(15, armedYes, armedNo, weaponTypeField);
+        armedBox.setAlignment(Pos.CENTER_LEFT);
+        formGrid.add(armedBox, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 3. Number of robbers involved
+        Label numberLabel = createStyledLabel("👥 How many robbers were involved? *", true);
+        TextField numberField = createStyledTextField();
+        numberField.setPromptText("Number and description");
+        formGrid.add(numberLabel, 0, row);
+        formGrid.add(numberField, 1, row++);
+
+        // 4. Description of robbers
+        Label descLabel = createStyledLabel("👤 Can you describe the robbers? *", true);
+        TextArea descArea = createStyledTextArea();
+        descArea.setPromptText("Height, clothing, distinguishing features, language, accent");
+        descArea.setPrefRowCount(3);
+        formGrid.add(descLabel, 0, row);
+        formGrid.add(descArea, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 5. Actions or words of robbers
+        Label actionsLabel = createStyledLabel("💬 Did the robbers say or do anything specific?", false);
+        TextArea actionsArea = createStyledTextArea();
+        actionsArea.setPromptText("Threats, demands, actions");
+        actionsArea.setPrefRowCount(3);
+        formGrid.add(actionsLabel, 0, row);
+        formGrid.add(actionsArea, 1, row++);
+
+        // 6. Items or money taken
+        Label itemsLabel = createStyledLabel("💰 What items or money were taken? *", true);
+        TextArea itemsArea = createStyledTextArea();
+        itemsArea.setPromptText("List valuables stolen: cash, jewelry, electronics, documents");
+        itemsArea.setPrefRowCount(3);
+        formGrid.add(itemsLabel, 0, row);
+        formGrid.add(itemsArea, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 7. Injuries during robbery
+        Label injuryLabel = createStyledLabel("🩹 Was anyone injured during the robbery?", false);
+        TextArea injuryArea = createStyledTextArea();
+        injuryArea.setPromptText("Victim or bystanders, details of injuries");
+        injuryArea.setPrefRowCount(3);
+        formGrid.add(injuryLabel, 0, row);
+        formGrid.add(injuryArea, 1, row++);
+
+        // 8. Vehicle used by robbers
+        Label vehicleLabel = createStyledLabel("🚗 Did the robbers use any vehicle?", false);
+        TextField vehicleField = createStyledTextField();
+        vehicleField.setPromptText("Type, color, registration if possible");
+        formGrid.add(vehicleLabel, 0, row);
+        formGrid.add(vehicleField, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 9. Witness info
+        Label witnessLabel = createStyledLabel("👁️ Did anyone witness the robbery?", false);
+        TextArea witnessArea = createStyledTextArea();
+        witnessArea.setPromptText("Names or descriptions of witnesses");
+        witnessArea.setPrefRowCount(3);
+        formGrid.add(witnessLabel, 0, row);
+        formGrid.add(witnessArea, 1, row++);
+
+        // 10. Suspicious activities noticed
+        Label suspiciousLabel = createStyledLabel("🔍 Did you notice anything suspicious before or after the robbery?", false);
+        TextArea suspiciousArea = createStyledTextArea();
+        suspiciousArea.setPrefRowCount(3);
+        formGrid.add(suspiciousLabel, 0, row);
+        formGrid.add(suspiciousArea, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 11. Previously reported
+        Label reportedLabel = createStyledLabel("📝 Have you reported this incident anywhere else before?", false);
+        ToggleGroup reportedGroup = new ToggleGroup();
+        RadioButton yesReported = createStyledRadioButton("Yes");
+        RadioButton noReported = createStyledRadioButton("No");
+        yesReported.setToggleGroup(reportedGroup);
+        noReported.setToggleGroup(reportedGroup);
+        formGrid.add(reportedLabel, 0, row);
+        HBox reportedBox = new HBox(20, yesReported, noReported);
+        reportedBox.setAlignment(Pos.CENTER_LEFT);
+        formGrid.add(reportedBox, 1, row++);
+
+        // 12. CCTV or video footage available
+        Label cctvLabel = createStyledLabel("📹 Is there any CCTV or video footage available?", false);
+        ToggleGroup cctvGroup = new ToggleGroup();
+        RadioButton cctvYes = createStyledRadioButton("Yes");
+        RadioButton cctvNo = createStyledRadioButton("No");
+        cctvYes.setToggleGroup(cctvGroup);
+        cctvNo.setToggleGroup(cctvGroup);
+        formGrid.add(cctvLabel, 0, row);
+        HBox cctvBox = new HBox(20, cctvYes, cctvNo);
+        cctvBox.setAlignment(Pos.CENTER_LEFT);
+        formGrid.add(cctvBox, 1, row++);
+
+        // Video file upload button (enabled only if cctvYes selected)
+        Button uploadVideoBtn = createStyledButton("📤 Upload Video", false);
+        uploadVideoBtn.setDisable(true);
+        final FileChooser fileChooser = new FileChooser();
+
+        cctvYes.setOnAction(e -> uploadVideoBtn.setDisable(false));
+        cctvNo.setOnAction(e -> uploadVideoBtn.setDisable(true));
+
+        uploadVideoBtn.setOnAction(e -> {
+            Window stage = formGrid.getScene().getWindow();
+            File file = fileChooser.showOpenDialog(stage);
+            if (file != null) {
+                uploadVideoBtn.setText("✅ Uploaded: " + file.getName());
+                uploadVideoBtn.setDisable(true);
+            }
+        });
+        formGrid.add(uploadVideoBtn, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 13. Targeted or random
+        Label targetedLabel = createStyledLabel("🎯 Do you know if this was a targeted robbery or random?", false);
+        TextField targetedField = createStyledTextField();
+        targetedField.setPromptText("Explain if known");
+        formGrid.add(targetedLabel, 0, row);
+        formGrid.add(targetedField, 1, row++);
+
+        // 14. Threats received
+        Label threatsLabel = createStyledLabel("⚠️ Have you or anyone else received any threats related to this robbery?", false);
+        TextArea threatsArea = createStyledTextArea();
+        threatsArea.setPrefRowCount(3);
+        formGrid.add(threatsLabel, 0, row);
+        formGrid.add(threatsArea, 1, row++);
+
+        // Add spacing before buttons
+        formGrid.add(new Label(""), 0, row++);
+
+        // Submit and Cancel buttons
+        Button submitBtn = createStyledButton("📤 Submit Report", true);
+        Button cancelBtn = createStyledButton("❌ Cancel", false);
+        HBox buttonBox = new HBox(15, submitBtn, cancelBtn);
+        buttonBox.setAlignment(Pos.CENTER);
+        formGrid.add(buttonBox, 1, row++);
+
+        // Submit validation
+        submitBtn.setOnAction(e -> {
+            if(!validateCommonFields())
+            {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please fill all required common fields.");
+                return;
+            }
+            // Simple mandatory checks example
+            if (locationField.getText().trim().isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please enter the robbery location.");
+                return;
+            }
+            if (armedGroup.getSelectedToggle() == null) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please specify if the robbery was armed or unarmed.");
+                return;
+            }
+            if (armedYes.isSelected() && weaponTypeField.getText().trim().isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please specify the weapon type.");
+                return;
+            }
+            if (numberField.getText().trim().isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please enter number and description of robbers.");
+                return;
+            }
+            if (descArea.getText().trim().isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please describe the robbers.");
+                return;
+            }
+            if (itemsArea.getText().trim().isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please list the items or money taken.");
+                return;
+            }
+            if (reportedGroup.getSelectedToggle() == null) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please specify if this incident has been reported elsewhere.");
+                return;
+            }
+            if (cctvGroup.getSelectedToggle() == null) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please specify if CCTV/video footage is available.");
+                return;
+            }
+            // If CCTV yes but no file uploaded
+            if (cctvYes.isSelected() && uploadVideoBtn.getText().equals("📤 Upload Video")) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please upload the video footage.");
+                return;
+            }
+            // All validations passed
+            showAlert(Alert.AlertType.INFORMATION, "Success", "Robbery report submitted successfully!");
+        });
+
+        // Cancel button just closes the form window
+        cancelBtn.setOnAction(e -> {
+            Stage stage = (Stage) cancelBtn.getScene().getWindow();
+            stage.close();
+        });
+
+        // Add header and form to main container
+        mainContainer.getChildren().addAll(headerSection, formContainer);
+
+        // Wrap in scroll pane
+        ScrollPane scrollPane = new ScrollPane(mainContainer);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setStyle("-fx-background-color: #f8f9fa;");
+
+        Scene scene = new Scene(scrollPane, 900, 750);
+        Stage stage = new Stage();
+        stage.setTitle("Robbery Case Report - Bangladesh Police");
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    private VBox createHeaderSection() {
+        VBox header = new VBox(10);
+        header.setAlignment(Pos.CENTER);
+        header.setPadding(new Insets(25, 20, 25, 20));
+        header.setStyle(
+                "-fx-background-color: linear-gradient(to bottom, #8b0000, #a52a2a);" +
+                        "-fx-border-color: #5c0000;" +
+                        "-fx-border-width: 0 0 3 0;"
         );
-        lightingConditionCombo.setPromptText("Select lighting condition");
-        grid.add(lightingLabel, 0, row);
-        grid.add(lightingConditionCombo, 1, row++);
 
-        Label crowdLevelLabel = new Label("Crowd Level / জনসমাগম:");
-        crowdLevelField = new TextField();
-        crowdLevelField.setPromptText("e.g. Crowded / জনাকীর্ণ, Empty / জনশূন্য");
-        grid.add(crowdLevelLabel, 0, row);
-        grid.add(crowdLevelField, 1, row++);
-
-        Label incidentDescriptionLabel = new Label("Detailed Description / বিস্তারিত বিবরণ:*");
-        incidentDescriptionArea = new TextArea();
-        incidentDescriptionArea.setPromptText("Describe what happened step by step / ঘটনার ধাপে ধাপে বিবরণ দিন...");
-        incidentDescriptionArea.setPrefRowCount(4);
-        grid.add(incidentDescriptionLabel, 0, row);
-        grid.add(incidentDescriptionArea, 1, row++);
-
-        Label robberSectionLabel = new Label("Robber Information ");
-        robberSectionLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-        grid.add(robberSectionLabel, 0, row++, 2, 1);
-
-        Label numberOfRobbersLabel = new Label("Number of Robbers / দস্যুর সংখ্যা:*");
-        numberOfRobbersField = new TextField();
-        numberOfRobbersField.setPromptText("e.g. 2, 3, Unknown");
-        grid.add(numberOfRobbersLabel, 0, row);
-        grid.add(numberOfRobbersField, 1, row++);
-
-        Label robbersDescriptionLabel = new Label("Robbers Description / দস্যুদের বর্ণনা:*");
-        robbersDescriptionArea = new TextArea();
-        robbersDescriptionArea.setPromptText("Height, build, clothing, age, distinctive features / উচ্চতা, গড়ন, পোশাক, বয়স, বিশেষ চিহ্ন...");
-        robbersDescriptionArea.setPrefRowCount(3);
-        grid.add(robbersDescriptionLabel, 0, row);
-        grid.add(robbersDescriptionArea, 1, row++);
-
-        Label weaponUsedLabel = new Label("Weapon Used / ব্যবহৃত অস্ত্র:*");
-        weaponUsedCombo = new ComboBox<>();
-        weaponUsedCombo.getItems().addAll(
-                "No Weapon / কোন অস্ত্র নেই",
-                "Knife / ছুরি",
-                "Gun / বন্দুক",
-                "Stick/Rod / লাঠি/রড",
-                "Threat Only / শুধু হুমকি",
-                "Other Sharp Object / অন্যান্য ধারালো বস্তু",
-                "Unknown / অজানা"
+        // Main title with emoji
+        Label titleLabel = new Label("🔫 ROBBERY CASE REPORT 🔫");
+        titleLabel.setStyle(
+                "-fx-font-family: 'System Bold', Arial;" +
+                        "-fx-font-size: 32px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-text-fill: #ffffff;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 3, 0, 2, 2);"
         );
-        weaponUsedCombo.setPromptText("Select weapon type");
-        grid.add(weaponUsedLabel, 0, row);
-        grid.add(weaponUsedCombo, 1, row++);
 
-        Label suspectKnownLabel = new Label("Suspect Known / সন্দেহভাজন পরিচিত:");
-        suspectKnownField = new TextField();
-        suspectKnownField.setPromptText("Name if known / নাম জানা থাকলে");
-        grid.add(suspectKnownLabel, 0, row);
-        grid.add(suspectKnownField, 1, row++);
-
-        Label vehicleUsedLabel = new Label("Vehicle Used / ব্যবহৃত যানবাহন:");
-        vehicleUsedCombo = new ComboBox<>();
-        vehicleUsedCombo.getItems().addAll(
-                "No Vehicle / কোন যানবাহন নেই",
-                "Motorcycle / মোটরসাইকেল",
-                "Car / গাড়ি",
-                "Rickshaw / রিকশা",
-                "CNG / সিএনজি",
-                "Bus / বাস",
-                "Bicycle / সাইকেল",
-                "On Foot / পায়ে হেঁটে",
-                "Other / অন্যান্য"
+        Label subtitleLabel = new Label("🏛️ Bangladesh Police Crime Reporting System");
+        subtitleLabel.setStyle(
+                "-fx-font-family: Arial;" +
+                        "-fx-font-size: 18px;" +
+                        "-fx-text-fill: #ffe4e1;" +
+                        "-fx-font-weight: bold;"
         );
-        vehicleUsedCombo.setPromptText("Select vehicle type");
-        grid.add(vehicleUsedLabel, 0, row);
-        grid.add(vehicleUsedCombo, 1, row++);
 
-        Label vehicleDetailsLabel = new Label("Vehicle Details / যানবাহনের বিবরণ:");
-        vehicleDetailsField = new TextField();
-        vehicleDetailsField.setPromptText("Number plate, color, model / নম্বর প্লেট, রং, মডেল");
-        grid.add(vehicleDetailsLabel, 0, row);
-        grid.add(vehicleDetailsField, 1, row++);
-
-        // Stolen Items
-        Label stolenSectionLabel = new Label("Stolen Items");
-        stolenSectionLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-        grid.add(stolenSectionLabel, 0, row++, 2, 1);
-
-        Label itemsStolenLabel = new Label("Items Stolen / চুরি হওয়া জিনিস:*");
-        itemsStolenArea = new TextArea();
-        itemsStolenArea.setPromptText("List all stolen items / সব চুরি হওয়া জিনিসের তালিকা...");
-        itemsStolenArea.setPrefRowCount(3);
-        grid.add(itemsStolenLabel, 0, row);
-        grid.add(itemsStolenArea, 1, row++);
-
-        Label totalValueLabel = new Label("Total Value / মোট মূল্য:*");
-        totalValueField = new TextField();
-        totalValueField.setPromptText("Total value in BDT / মোট মূল্য টাকায়");
-        grid.add(totalValueLabel, 0, row);
-        grid.add(totalValueField, 1, row++);
-
-        // Injury and Medical
-        Label injurySectionLabel = new Label("Injury and Medical / আঘাত ও চিকিৎসা:");
-        injurySectionLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-        grid.add(injurySectionLabel, 0, row++, 2, 1);
-
-        Label injuryStatusLabel = new Label("Injury Status / আঘাতের অবস্থা:*");
-        injuryStatusCombo = new ComboBox<>();
-        injuryStatusCombo.getItems().addAll(
-                "No Injury / কোন আঘাত নেই",
-                "Minor Injury / সামান্য আঘাত",
-                "Serious Injury / গুরুতর আঘাত",
-                "Critical Injury / সংকটজনক আঘাত"
+        // Info section with better styling
+        VBox infoBox = new VBox(8);
+        infoBox.setAlignment(Pos.CENTER);
+        infoBox.setPadding(new Insets(20, 0, 0, 0));
+        infoBox.setStyle(
+                "-fx-background-color: rgba(139, 0, 0, 0.7);" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-padding: 15;"
         );
-        injuryStatusCombo.setPromptText("Select injury status");
-        grid.add(injuryStatusLabel, 0, row);
-        grid.add(injuryStatusCombo, 1, row++);
 
-        Label injuryDetailsLabel = new Label("Injury Details / আঘাতের বিবরণ:");
-        injuryDetailsArea = new TextArea();
-        injuryDetailsArea.setPromptText("Describe injuries if any / আঘাত থাকলে বিবরণ দিন...");
-        injuryDetailsArea.setPrefRowCount(2);
-        grid.add(injuryDetailsLabel, 0, row);
-        grid.add(injuryDetailsArea, 1, row++);
+        Label infoTitle = new Label("⚠️ Important Information about Robbery Cases:");
+        infoTitle.setStyle(
+                "-fx-font-family: Arial;" +
+                        "-fx-font-size: 15px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-text-fill: #ffd700;"
+        );
 
-        Label witnessSectionLabel = new Label("Witness Information ");
-        witnessSectionLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-        grid.add(witnessSectionLabel, 0, row++, 2, 1);
+        Label infoText = new Label(
+                "🚨 Report robbery immediately for urgent police response\n" +
+                        "📍 Provide exact location and time details\n" +
+                        "👥 Describe suspects as accurately as possible\n" +
+                        "🚨 Emergency Robbery Hotline: 999 | 📞 Police Control: 100"
+        );
+        infoText.setStyle(
+                "-fx-font-family: Arial;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-text-fill: #ffe4e1;" +
+                        "-fx-line-spacing: 4px;"
+        );
 
-        Label witnessAvailableLabel = new Label("Witness Available / সাক্ষী আছে:*");
-        witnessAvailableCombo = new ComboBox<>();
-        witnessAvailableCombo.getItems().addAll("Yes / হ্যাঁ", "No / না", "Unknown / অজানা");
-        witnessAvailableCombo.setPromptText("Are there any witnesses?");
-        grid.add(witnessAvailableLabel, 0, row);
-        grid.add(witnessAvailableCombo, 1, row++);
+        infoBox.getChildren().addAll(infoTitle, infoText);
+        header.getChildren().addAll(titleLabel, subtitleLabel, infoBox);
 
-        Label witnessDetailsLabel = new Label("Witness Details / সাক্ষীর বিবরণ:");
-        witnessDetailsArea = new TextArea();
-        witnessDetailsArea.setPromptText("Names, contact numbers of witnesses / সাক্ষীদের নাম, যোগাযোগ নম্বর...");
-        witnessDetailsArea.setPrefRowCount(3);
-        witnessDetailsArea.setDisable(true); // Initially disabled
-        grid.add(witnessDetailsLabel, 0, row);
-        grid.add(witnessDetailsArea, 1, row++);
+        return header;
+    }
 
-        // Add listener to enable/disable witness details based on selection
-        witnessAvailableCombo.setOnAction(e -> {
-            if (witnessAvailableCombo.getValue() != null &&
-                    witnessAvailableCombo.getValue().startsWith("Yes")) {
-                witnessDetailsArea.setDisable(false);
+    private Label createStyledLabel(String text, boolean required) {
+        Label label = new Label(text);
+        String baseStyle =
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-font-weight: " + (required ? "bold" : "normal") + ";" +
+                        "-fx-text-fill: " + (required ? "#d32f2f" : "#424242") + ";";
+        label.setStyle(baseStyle);
+        return label;
+    }
+
+    private TextField createStyledTextField() {
+        TextField field = new TextField();
+        field.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;" +
+                        "-fx-padding: 8px 12px;"
+        );
+        field.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                field.setStyle(field.getStyle() + "-fx-border-color: #2196f3; -fx-border-width: 2px;");
             } else {
-                witnessDetailsArea.setDisable(true);
-                witnessDetailsArea.clear();
+                field.setStyle(field.getStyle().replace("-fx-border-color: #2196f3; -fx-border-width: 2px;", ""));
             }
         });
+        return field;
+    }
 
-
-        Label securitySectionLabel = new Label("Security and Evidence");
-        securitySectionLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-        grid.add(securitySectionLabel, 0, row++, 2, 1);
-
-        Label securityCameraLabel = new Label("Security Camera / নিরাপত্তা ক্যামেরা:*");
-        securityCameraCombo = new ComboBox<>();
-        securityCameraCombo.getItems().addAll(
-                "Yes, Available / হ্যাঁ, আছে",
-                "No / না",
-                "Unknown / অজানা"
+    private TextArea createStyledTextArea() {
+        TextArea area = new TextArea();
+        area.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;" +
+                        "-fx-padding: 8px 12px;"
         );
-        securityCameraCombo.setPromptText("CCTV footage available?");
-        grid.add(securityCameraLabel, 0, row);
-        grid.add(securityCameraCombo, 1, row++);
-
-        Label helpRequestedLabel = new Label("Help Requested / সাহায্য চাওয়া:*");
-        helpRequestedCombo = new ComboBox<>();
-        helpRequestedCombo.getItems().addAll(
-                "Yes, People Helped / হ্যাঁ, লোকজন সাহায্য করেছে",
-                "Yes, But No Help / হ্যাঁ, কিন্তু সাহায্য পাইনি",
-                "No Help Requested / সাহায্য চাইনি",
-                "No One Around / কেউ আশেপাশে ছিল না"
-        );
-        helpRequestedCombo.setPromptText("Did you request help?");
-        grid.add(helpRequestedLabel, 0, row);
-        grid.add(helpRequestedCombo, 1, row++);
-
-        // Additional Information
-        Label additionalSectionLabel = new Label("Additional Information / অতিরিক্ত তথ্য:");
-        additionalSectionLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-        grid.add(additionalSectionLabel, 0, row++, 2, 1);
-
-        Label additionalInfoLabel = new Label("Additional Information / অতিরিক্ত তথ্য:");
-        additionalInfoArea = new TextArea();
-        additionalInfoArea.setPromptText("Any other relevant information / অন্য কোন প্রাসঙ্গিক তথ্য...");
-        additionalInfoArea.setPrefRowCount(3);
-        grid.add(additionalInfoLabel, 0, row);
-        grid.add(additionalInfoArea, 1, row++);
-
-        // Wrap in ScrollPane
-        ScrollPane scroll = new ScrollPane(grid);
-        scroll.setFitToWidth(true);
-        scroll.setFitToHeight(true);
-        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
-
-        // Set preferred size for dialog
-        scroll.setPrefSize(750,600);
-
-        dialog.getDialogPane().setContent(scroll);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        // Handle result
-        dialog.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                if (validate()) {
-                    // Record the case
-                    UserDashboard.CaseRecord newCase = new UserDashboard.CaseRecord(
-                            "CR" + System.currentTimeMillis(),
-                            "Robbery",
-                            buildCaseDescription(),
-                            LocalDateTime.now(),
-                            "Under Investigation"
-                    );
-
-                    // Confirmation
-                    Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setTitle("Report Submitted / রিপোর্ট জমা দেওয়া হয়েছে");
-                    info.setHeaderText("Your robbery report has been submitted successfully");
-                    info.setContentText("Case ID: " + newCase.getCaseId() +
-                            "\nআপনার দস্যুতার রিপোর্ট সফলভাবে জমা দেওয়া হয়েছে।" +
-                            "\nঅনুসন্ধানী টিম শীঘ্রই আপনার সাথে যোগাযোগ করবে।");
-                    info.showAndWait();
-                }
+        area.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                area.setStyle(area.getStyle() + "-fx-border-color: #2196f3; -fx-border-width: 2px;");
+            } else {
+                area.setStyle(area.getStyle().replace("-fx-border-color: #2196f3; -fx-border-width: 2px;", ""));
             }
         });
+        return area;
     }
 
-    private boolean validate() {
-        List<String> errors = new ArrayList<>();
-
-        // Required fields validation
-        if (robberyTypeCombo.getValue() == null) {
-            errors.add("Type of robbery is required / দস্যুতার ধরন আবশ্যক");
-        }
-
-        if (timeOfDayCombo.getValue() == null) {
-            errors.add("Time of day is required / দিনের সময় আবশ্যক");
-        }
-
-        if (lightingConditionCombo.getValue() == null) {
-            errors.add("Lighting condition is required / আলোর অবস্থা আবশ্যক");
-        }
-
-        if (incidentDescriptionArea.getText().trim().isEmpty()) {
-            errors.add("Detailed description is required / বিস্তারিত বিবরণ আবশ্যক");
-        }
-
-        if (numberOfRobbersField.getText().trim().isEmpty()) {
-            errors.add("Number of robbers is required / দস্যুর সংখ্যা আবশ্যক");
-        }
-
-        if (robbersDescriptionArea.getText().trim().isEmpty()) {
-            errors.add("Robbers description is required / দস্যুদের বর্ণনা আবশ্যক");
-        }
-
-        if (weaponUsedCombo.getValue() == null) {
-            errors.add("Weapon used information is required / ব্যবহৃত অস্ত্রের তথ্য আবশ্যক");
-        }
-
-        if (itemsStolenArea.getText().trim().isEmpty()) {
-            errors.add("Items stolen information is required / চুরি হওয়া জিনিসের তথ্য আবশ্যক");
-        }
-
-        if (totalValueField.getText().trim().isEmpty()) {
-            errors.add("Total value is required / মোট মূল্য আবশ্যক");
-        }
-
-        if (injuryStatusCombo.getValue() == null) {
-            errors.add("Injury status is required / আঘাতের অবস্থা আবশ্যক");
-        }
-
-        if (witnessAvailableCombo.getValue() == null) {
-            errors.add("Witness availability information is required / সাক্ষীর তথ্য আবশ্যক");
-        }
-
-        // Validate witness details if witness is available
-        if (witnessAvailableCombo.getValue() != null &&
-                witnessAvailableCombo.getValue().startsWith("Yes") &&
-                witnessDetailsArea.getText().trim().isEmpty()) {
-            errors.add("Witness details are required when witnesses are available / সাক্ষী থাকলে সাক্ষীর বিবরণ আবশ্যক");
-        }
-
-        if (securityCameraCombo.getValue() == null) {
-            errors.add("Security camera information is required / নিরাপত্তা ক্যামেরার তথ্য আবশ্যক");
-        }
-
-        if (helpRequestedCombo.getValue() == null) {
-            errors.add("Help requested information is required / সাহায্য চাওয়ার তথ্য আবশ্যক");
-        }
-
-        if (policeNotifiedCombo.getValue() == null) {
-            errors.add("Police notification information is required / পুলিশকে জানানোর তথ্য আবশ্যক");
-        }
-
-        // Validate total value format
-        if (!totalValueField.getText().trim().isEmpty()) {
-            try {
-                String value = totalValueField.getText().trim().replaceAll("[^\\d.]", "");
-                if (value.isEmpty()) {
-                    errors.add("Please enter a valid amount / সঠিক পরিমাণ লিখুন");
-                } else {
-                    double amount = Double.parseDouble(value);
-                    if (amount < 0) {
-                        errors.add("Amount cannot be negative / পরিমাণ নেগেটিভ হতে পারে না");
-                    }
-                }
-            } catch (NumberFormatException e) {
-                errors.add("Please enter a valid amount / সঠিক পরিমাণ লিখুন");
-            }
-        }
-
-        // Validate number of robbers
-        if (!numberOfRobbersField.getText().trim().isEmpty() &&
-                !numberOfRobbersField.getText().trim().equalsIgnoreCase("unknown")) {
-            try {
-                int count = Integer.parseInt(numberOfRobbersField.getText().trim());
-                if (count <= 0) {
-                    errors.add("Number of robbers must be positive / দস্যুর সংখ্যা ধনাত্মক হতে হবে");
-                }
-            } catch (NumberFormatException e) {
-                // Allow "unknown" or text descriptions
-            }
-        }
-
-        // Show errors if any
-        if (!errors.isEmpty()) {
-            StringBuilder errorMessage = new StringBuilder("Please fix the following errors:\n" +
-                    "নিম্নলিখিত ত্রুটিগুলি ঠিক করুন:\n\n");
-            for (String error : errors) {
-                errorMessage.append("• ").append(error).append("\n");
-            }
-
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Validation Error / যাচাইকরণ ত্রুটি");
-            alert.setHeaderText("Please complete all required fields / সব আবশ্যক ক্ষেত্র পূরণ করুন");
-            alert.setContentText(errorMessage.toString());
-            alert.showAndWait();
-            return false;
-        }
-
-        return true;
+    private RadioButton createStyledRadioButton(String text) {
+        RadioButton radio = new RadioButton(text);
+        radio.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 12px;" +
+                        "-fx-text-fill: #424242;"
+        );
+        return radio;
     }
 
-    private String buildCaseDescription() {
-        StringBuilder description = new StringBuilder();
-        description.append("Robbery Type: ").append(robberyTypeCombo.getValue()).append("\n");
-        description.append("Time of Day: ").append(timeOfDayCombo.getValue()).append("\n");
-        description.append("Lighting: ").append(lightingConditionCombo.getValue()).append("\n");
-        description.append("Number of Robbers: ").append(numberOfRobbersField.getText()).append("\n");
-        description.append("Weapon Used: ").append(weaponUsedCombo.getValue()).append("\n");
-        description.append("Total Value Lost: ").append(totalValueField.getText()).append(" BDT\n");
-        description.append("Injury Status: ").append(injuryStatusCombo.getValue()).append("\n");
-        description.append("Witness Available: ").append(witnessAvailableCombo.getValue()).append("\n");
-        description.append("Security Camera: ").append(securityCameraCombo.getValue()).append("\n");
-        description.append("Police Notified: ").append(policeNotifiedCombo.getValue()).append("\n");
+    private Button createStyledButton(String text, boolean primary) {
+        Button button = new Button(text);
+        String baseStyle =
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 14px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-padding: 10px 25px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;" +
+                        "-fx-cursor: hand;";
 
-        description.append("\nDetailed Description:\n").append(incidentDescriptionArea.getText()).append("\n");
-        description.append("\nRobbers Description:\n").append(robbersDescriptionArea.getText()).append("\n");
-        description.append("\nItems Stolen:\n").append(itemsStolenArea.getText()).append("\n");
-
-        if (!crowdLevelField.getText().trim().isEmpty()) {
-            description.append("\nCrowd Level: ").append(crowdLevelField.getText()).append("\n");
+        if (primary) {
+            button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #8b0000, #a52a2a);" +
+                    "-fx-text-fill: white;" +
+                    "-fx-border-color: #8b0000;"
+            );
+            button.setOnMouseEntered(e -> button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #a52a2a, #b22222);" +
+                    "-fx-text-fill: white;" +
+                    "-fx-border-color: #a52a2a;"
+            ));
+            button.setOnMouseExited(e -> button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #8b0000, #a52a2a);" +
+                    "-fx-text-fill: white;" +
+                    "-fx-border-color: #8b0000;"
+            ));
+        } else {
+            button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #f5f5f5, #e0e0e0);" +
+                    "-fx-text-fill: #424242;" +
+                    "-fx-border-color: #bdbdbd;"
+            );
+            button.setOnMouseEntered(e -> button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #e0e0e0, #d0d0d0);" +
+                    "-fx-text-fill: #424242;" +
+                    "-fx-border-color: #9e9e9e;"
+            ));
+            button.setOnMouseExited(e -> button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #f5f5f5, #e0e0e0);" +
+                    "-fx-text-fill: #424242;" +
+                    "-fx-border-color: #bdbdbd;"
+            ));
         }
 
-        if (!suspectKnownField.getText().trim().isEmpty()) {
-            description.append("\nSuspect Known: ").append(suspectKnownField.getText()).append("\n");
-        }
+        return button;
+    }
 
-        if (vehicleUsedCombo.getValue() != null && !vehicleUsedCombo.getValue().contains("No Vehicle")) {
-            description.append("\nVehicle Used: ").append(vehicleUsedCombo.getValue()).append("\n");
-            if (!vehicleDetailsField.getText().trim().isEmpty()) {
-                description.append("Vehicle Details: ").append(vehicleDetailsField.getText()).append("\n");
-            }
-        }
+    private void showAlert(Alert.AlertType type, String title, String msg) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
 
-        if (!injuryDetailsArea.getText().trim().isEmpty()) {
-            description.append("\nInjury Details: ").append(injuryDetailsArea.getText()).append("\n");
-        }
+        // Style the alert dialog
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;"
+        );
 
-
-
-        if (!witnessDetailsArea.getText().trim().isEmpty()) {
-            description.append("\nWitness Details: ").append(witnessDetailsArea.getText()).append("\n");
-        }
-
-
-
-        if (!additionalInfoArea.getText().trim().isEmpty()) {
-            description.append("\nAdditional Information: ").append(additionalInfoArea.getText()).append("\n");
-        }
-
-        return description.toString();
+        alert.showAndWait();
     }
 }
