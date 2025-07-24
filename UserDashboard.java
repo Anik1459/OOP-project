@@ -1,4 +1,4 @@
-package src.main;
+package org.example.java;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -303,11 +303,48 @@ public class UserDashboard extends Application {
 
     private void reportCrime(String crimeType) {
         // Create crime reporting dialog
+        System.out.println("reportCrime called with: " + crimeType); // Debug line
+
         if(crimeType.equals("Fraud"))
         {
+            System.out.println("Opening Fraud form..."); // Debug line
             new Fraud().absMethod();
         } else if (crimeType.equals("Robbery")) {
+            System.out.println("Opening Robbery form..."); // Debug line
             new Robbery().absMethod();
+        }
+        else if(crimeType.equals("Kidnapping")){
+            System.out.println("Opening Kidnapping form..."); // Debug line
+            try {
+                new Kidnapping().absMethod();
+                System.out.println("Kidnapping form opened successfully!"); // Debug line
+            } catch (Exception e) {
+                System.err.println("Error opening Kidnapping form: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        else if(crimeType.equals("Money Laundering")){
+            System.out.println("Opening Money Laundering form...");
+            try {
+                new MoneyLaundering().absMethod();
+                System.out.println("Money Laundering form opened successfully!"); // Debug line
+            } catch (Exception e) {
+                System.err.println("Error opening Money Laundering form: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        else if(crimeType.equals("Extortion")){
+            System.out.println("Opening Extortion form...");
+            try {
+                new Extortion().absMethod();
+                System.out.println("Extortion form opened successfully!"); // Debug line
+            } catch (Exception e) {
+                System.err.println("Error opening Extortion form: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        else {
+            System.out.println("No handler for crime type: " + crimeType); // Debug line
         }
     }
 
@@ -422,6 +459,11 @@ public class UserDashboard extends Application {
 
         tabPane.getTabs().addAll(reportTab, historyTab, emergencyTab, helpTab);
         return tabPane;
+    }
+
+    // Test method to check reportCrime functionality
+    public void testReportCrime(String crimeType) {
+        reportCrime(crimeType);
     }
 
     public static void main(String[] args) {
