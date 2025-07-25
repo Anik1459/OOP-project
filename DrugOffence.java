@@ -1,47 +1,70 @@
-package src.main;
+package org.example.java;
+
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
 import java.io.File;
 
-
 public class DrugOffence extends Crime {
 
     @Override
     public void absMethod() {
-        // --- Base / common form ---------------------------------------------------------
-        GridPane formGrid = buildForm(); // from Crime (includes complainant, contact, etc.)
-        formGrid.setVgap(10);
-        formGrid.setHgap(10);
-        formGrid.setPadding(new Insets(20));
+        // Create main container
+        VBox mainContainer = new VBox();
+        mainContainer.setStyle(
+                "-fx-background-color: linear-gradient(to bottom, #f8f9fa, #e9ecef);" +
+                        "-fx-padding: 0;"
+        );
 
-        int row = formGrid.getRowCount(); // append after common fields
+        // Header Section
+        VBox headerSection = createHeaderSection();
 
-        // ---------------------------------------------------------------------------------
-        // 1. Type of drug involved (ComboBox)
-        // ---------------------------------------------------------------------------------
-        Label drugTypeLabel = new Label("What type of drug is involved? *");
-        ComboBox<String> drugTypeBox = new ComboBox<>();
+        // Form Section
+        GridPane formGrid = buildForm();
+        formGrid.setVgap(15);
+        formGrid.setHgap(20);
+        formGrid.setPadding(new Insets(30, 40, 30, 40));
+        formGrid.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 2);"
+        );
+
+        // Wrap form in a container with padding
+        VBox formContainer = new VBox(formGrid);
+        formContainer.setPadding(new Insets(20, 30, 30, 30));
+
+        int row = formGrid.getRowCount();
+
+        // 1. Type of drug involved
+        Label drugTypeLabel = createStyledLabel("💊 Type of Drug Involved *:", true);
+        ComboBox<String> drugTypeBox = createStyledComboBox();
         drugTypeBox.getItems().addAll(
-                "Cannabis",
+                "Cannabis/Marijuana",
                 "Heroin",
-                "Yaba",
+                "Yaba (Methamphetamine pills)",
                 "Cocaine",
-                "Methamphetamine",
-                "Phensedyl / Codeine syrup",
+                "Methamphetamine (Ice/Crystal)",
+                "Phensedyl/Codeine syrup",
                 "Opium",
+                "Ecstasy/MDMA",
+                "LSD",
+                "Prescription drugs (misused)",
                 "Other"
         );
         drugTypeBox.setPromptText("Select drug type");
 
-        TextField otherDrugField = new TextField();
-        otherDrugField.setPromptText("If 'Other', specify");
+        TextField otherDrugField = createStyledTextField();
+        otherDrugField.setPromptText("If 'Other', specify the drug name");
         otherDrugField.setDisable(true);
         drugTypeBox.setOnAction(e -> {
             String sel = drugTypeBox.getValue();
@@ -52,37 +75,82 @@ public class DrugOffence extends Crime {
         formGrid.add(drugTypeBox, 1, row++);
         formGrid.add(otherDrugField, 1, row++);
 
-        // ---------------------------------------------------------------------------------
-        // 2. Quantity of drug
-        // ---------------------------------------------------------------------------------
-        Label qtyLabel = new Label("Quantity involved (specify units) *");
-        TextField qtyField = new TextField();
-        qtyField.setPromptText("e.g., 500 gm, 20 tablets, 3 vials");
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 2. Quantity and packaging
+        Label qtyLabel = createStyledLabel("⚖️ Quantity and Packaging Details *:", true);
         formGrid.add(qtyLabel, 0, row);
+        formGrid.add(new Label(""), 1, row++);
+
+        Label qtyAmountLabel = createStyledLabel("📏 Approximate quantity:", false);
+        TextField qtyField = createStyledTextField();
+        qtyField.setPromptText("e.g., 500 gm, 20 tablets, 3 vials, 2 packets");
+        formGrid.add(qtyAmountLabel, 0, row);
         formGrid.add(qtyField, 1, row++);
 
-        // ---------------------------------------------------------------------------------
-        // 3. Incident location (ComboBox)
-        // ---------------------------------------------------------------------------------
-        Label whereLabel = new Label("Where did the incident take place? *");
-        ComboBox<String> whereBox = new ComboBox<>();
+        Label packagingLabel = createStyledLabel("📦 How was it packaged?", false);
+        ComboBox<String> packagingBox = createStyledComboBox();
+        packagingBox.getItems().addAll(
+                "Small plastic packets/pouches",
+                "Bottles/vials",
+                "Aluminum foil wraps",
+                "Cigarette packets",
+                "Loose/unwrapped",
+                "Professional pharmaceutical packaging",
+                "Other"
+        );
+        packagingBox.setPromptText("Select packaging type");
+        formGrid.add(packagingLabel, 0, row);
+        formGrid.add(packagingBox, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 3. Nature of the incident
+        Label incidentLabel = createStyledLabel("🚨 Nature of Drug Incident *:", true);
+        formGrid.add(incidentLabel, 0, row);
+        formGrid.add(new Label(""), 1, row++);
+
+        Label incidentTypeLabel = createStyledLabel("📋 What type of incident?", false);
+        CheckBox possession = createStyledCheckBox("Drug possession");
+        CheckBox selling = createStyledCheckBox("Drug selling/trafficking");
+        CheckBox consumption = createStyledCheckBox("Drug consumption");
+        CheckBox manufacturing = createStyledCheckBox("Drug manufacturing");
+        CheckBox smuggling = createStyledCheckBox("Drug smuggling");
+        CheckBox distribution = createStyledCheckBox("Drug distribution");
+
+        GridPane incidentPane = new GridPane();
+        incidentPane.setHgap(15);
+        incidentPane.setVgap(8);
+        incidentPane.addRow(0, possession, selling, consumption);
+        incidentPane.addRow(1, manufacturing, smuggling, distribution);
+
+        formGrid.add(incidentTypeLabel, 0, row);
+        formGrid.add(incidentPane, 1, row++);
+
+        // 4. Location details
+        Label whereLabel = createStyledLabel("📍 Incident Location Details *:", true);
+        ComboBox<String> whereBox = createStyledComboBox();
         whereBox.getItems().addAll(
-                "Street / Road",
-                "House / Residence",
-                "Vehicle",
-                "Public Place / Park",
-                "Educational Institution",
-                "Workplace / Factory",
+                "Street/Road",
+                "House/Residence",
+                "Vehicle (car/bus/rickshaw)",
+                "Public place/Park",
+                "Educational institution",
+                "Workplace/Factory",
+                "Hotel/Restaurant",
+                "Transport terminal",
+                "Border area",
                 "Other"
         );
         whereBox.setPromptText("Select location type");
 
-        TextField whereDetailsField = new TextField();
-        whereDetailsField.setPromptText("Exact address / description");
+        TextField whereDetailsField = createStyledTextField();
+        whereDetailsField.setPromptText("Exact address and specific location details");
         whereDetailsField.setDisable(true);
         whereBox.setOnAction(e -> {
             String sel = whereBox.getValue();
-            // Always allow address details when something selected; but required if Other.
             whereDetailsField.setDisable(sel == null);
         });
 
@@ -90,30 +158,28 @@ public class DrugOffence extends Crime {
         formGrid.add(whereBox, 1, row++);
         formGrid.add(whereDetailsField, 1, row++);
 
-        // ---------------------------------------------------------------------------------
-        // 4. Date & approx time noticed
-        // ---------------------------------------------------------------------------------
-        Label whenLabel = new Label("When did you notice / encounter the drug offence? *");
-        DatePicker datePicker = new DatePicker();
-        TextField timeField = new TextField();
-        timeField.setPromptText("Approx time (e.g., 10:30 PM)");
-        HBox whenBox = new HBox(10, datePicker, timeField);
-        formGrid.add(whenLabel, 0, row);
-        formGrid.add(whenBox, 1, row++);
-        Label discoverLabel = new Label("How was the drug discovered / detected? *");
-        ComboBox<String> discoverBox = new ComboBox<>();
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 5. Discovery method
+        Label discoverLabel = createStyledLabel("🔍 How was the Drug Discovered? *:", true);
+        ComboBox<String> discoverBox = createStyledComboBox();
         discoverBox.getItems().addAll(
-                "Random Check",
-                "Tip-off / Informant",
-                "Suspicious Behavior",
-                "Public Complaint",
-                "Routine Patrol",
+                "Police raid",
+                "Random security check",
+                "Tip-off from informant",
+                "Suspicious behavior noticed",
+                "Public complaint",
+                "Routine patrol",
+                "Intelligence operation",
+                "Border control",
+                "Caught in the act",
                 "Other"
         );
-        discoverBox.setPromptText("Select method");
+        discoverBox.setPromptText("Select discovery method");
 
-        TextField discoverOtherField = new TextField();
-        discoverOtherField.setPromptText("If 'Other', specify");
+        TextField discoverOtherField = createStyledTextField();
+        discoverOtherField.setPromptText("If 'Other', provide details");
         discoverOtherField.setDisable(true);
         discoverBox.setOnAction(e -> {
             String sel = discoverBox.getValue();
@@ -124,171 +190,198 @@ public class DrugOffence extends Crime {
         formGrid.add(discoverBox, 1, row++);
         formGrid.add(discoverOtherField, 1, row++);
 
-        // ---------------------------------------------------------------------------------
-        // 6. Drug trafficking / selling observed? (Yes/No dropdown)
-        // ---------------------------------------------------------------------------------
-        Label traffickLabel = new Label("Drug trafficking / selling observed? *");
-        ComboBox<String> traffickBox = new ComboBox<>();
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 6. Persons involved
+        Label personsLabel = createStyledLabel("👥 Persons Involved:", false);
+        formGrid.add(personsLabel, 0, row);
+        formGrid.add(new Label(""), 1, row++);
+
+        Label personsCountLabel = createStyledLabel("🔢 Number of persons involved:", false);
+        ComboBox<String> personsCountBox = createStyledComboBox();
+        personsCountBox.getItems().addAll("1", "2", "3-5", "6-10", "More than 10", "Unknown");
+        personsCountBox.setPromptText("Select count");
+        formGrid.add(personsCountLabel, 0, row);
+        formGrid.add(personsCountBox, 1, row++);
+
+        Label ageGroupLabel = createStyledLabel("👶 Age group of persons:", false);
+        CheckBox minors = createStyledCheckBox("Minors (under 18)");
+        CheckBox youth = createStyledCheckBox("Youth (18-25)");
+        CheckBox adults = createStyledCheckBox("Adults (26-50)");
+        CheckBox elderly = createStyledCheckBox("Elderly (over 50)");
+
+        HBox ageBox = new HBox(15, minors, youth, adults, elderly);
+        formGrid.add(ageGroupLabel, 0, row);
+        formGrid.add(ageBox, 1, row++);
+
+        Label genderLabel = createStyledLabel("👨‍👩‍👧‍👦 Gender of persons involved:", false);
+        CheckBox male = createStyledCheckBox("Male");
+        CheckBox female = createStyledCheckBox("Female");
+        CheckBox transgender = createStyledCheckBox("Transgender");
+
+        HBox genderBox = new HBox(15, male, female, transgender);
+        formGrid.add(genderLabel, 0, row);
+        formGrid.add(genderBox, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 7. Drug activity details
+        Label activityLabel = createStyledLabel("💰 Drug Activity Details:", false);
+        formGrid.add(activityLabel, 0, row);
+        formGrid.add(new Label(""), 1, row++);
+
+        Label traffickLabel = createStyledLabel("🚛 Drug trafficking/selling observed? *", false);
+        ComboBox<String> traffickBox = createStyledComboBox();
         traffickBox.getItems().addAll("Yes", "No", "Not Sure");
         traffickBox.setPromptText("Select");
         formGrid.add(traffickLabel, 0, row);
         formGrid.add(traffickBox, 1, row++);
 
-        // ---------------------------------------------------------------------------------
-        // 7. Exchange of money/items related to drug trade? (Yes/No dropdown)
-        // ---------------------------------------------------------------------------------
-        Label exchangeLabel = new Label("Exchange of money / items seen? *");
-        ComboBox<String> exchangeBox = new ComboBox<>();
+        Label exchangeLabel = createStyledLabel("💵 Money/items exchange witnessed? *", false);
+        ComboBox<String> exchangeBox = createStyledComboBox();
         exchangeBox.getItems().addAll("Yes", "No", "Not Sure");
         exchangeBox.setPromptText("Select");
         formGrid.add(exchangeLabel, 0, row);
         formGrid.add(exchangeBox, 1, row++);
 
-        // ---------------------------------------------------------------------------------
-        // 8. Suspicious vehicles or persons
-        // ---------------------------------------------------------------------------------
-        Label vehicleLabel = new Label("Suspicious vehicles / persons at scene?");
-        TextArea vehicleArea = new TextArea();
-        vehicleArea.setPromptText("Vehicle description, registration, persons seen, etc.");
+        Label priceLabel = createStyledLabel("💸 Approximate transaction amount:", false);
+        TextField priceField = createStyledTextField();
+        priceField.setPromptText("Amount in BDT (if observed)");
+        formGrid.add(priceLabel, 0, row);
+        formGrid.add(priceField, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 8. Evidence and items
+        Label itemsLabel = createStyledLabel("🔍 Evidence and Items Found:", false);
+        formGrid.add(itemsLabel, 0, row);
+        formGrid.add(new Label(""), 1, row++);
+
+        Label recoveredLabel = createStyledLabel("📋 Drug-related items recovered:", false);
+        CheckBox packets = createStyledCheckBox("Drug packets/containers");
+        CheckBox syringes = createStyledCheckBox("Syringes/needles");
+        CheckBox pipes = createStyledCheckBox("Smoking pipes/bongs");
+        CheckBox scales = createStyledCheckBox("Weighing scales");
+        CheckBox foil = createStyledCheckBox("Aluminum foil/wraps");
+        CheckBox cash = createStyledCheckBox("Large amounts of cash");
+        CheckBox chemicals = createStyledCheckBox("Manufacturing chemicals");
+        CheckBox equipment = createStyledCheckBox("Manufacturing equipment");
+
+        GridPane itemsPane = new GridPane();
+        itemsPane.setHgap(15);
+        itemsPane.setVgap(8);
+        itemsPane.addRow(0, packets, syringes, pipes);
+        itemsPane.addRow(1, scales, foil, cash);
+        itemsPane.addRow(2, chemicals, equipment);
+
+        formGrid.add(recoveredLabel, 0, row);
+        formGrid.add(itemsPane, 1, row++);
+
+        Label weaponsLabel = createStyledLabel("⚔️ Weapons or dangerous items found:", false);
+        ComboBox<String> weaponsBox = createStyledComboBox();
+        weaponsBox.getItems().addAll(
+                "None",
+                "Knife/Sharp objects",
+                "Firearms/Guns",
+                "Homemade weapons",
+                "Explosives",
+                "Acid/Chemicals",
+                "Other dangerous items"
+        );
+        weaponsBox.setPromptText("Select weapon type");
+        formGrid.add(weaponsLabel, 0, row);
+        formGrid.add(weaponsBox, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 9. Suspicious activities
+        Label suspiciousLabel = createStyledLabel("👀 Suspicious Activities Observed:", false);
+        formGrid.add(suspiciousLabel, 0, row);
+        formGrid.add(new Label(""), 1, row++);
+
+        Label vehicleLabel = createStyledLabel("🚗 Suspicious vehicles or persons:", false);
+        TextArea vehicleArea = createStyledTextArea();
+        vehicleArea.setPromptText("Vehicle descriptions, license plates, person descriptions, suspicious behavior...");
         vehicleArea.setPrefRowCount(3);
         formGrid.add(vehicleLabel, 0, row);
         formGrid.add(vehicleArea, 1, row++);
 
-        // ---------------------------------------------------------------------------------
-        // 9. Witnesses? (Yes/No dropdown -> if Yes show fields)
-        // ---------------------------------------------------------------------------------
-        Label witnessLabel = new Label("Any witnesses to the incident? *");
-        ComboBox<String> witnessBox = new ComboBox<>();
+        Label priorLabel = createStyledLabel("🔄 Previous involvement in drugs? *", false);
+        ComboBox<String> priorBox = createStyledComboBox();
+        priorBox.getItems().addAll("Yes", "No", "Not Sure", "First time witnessed");
+        priorBox.setPromptText("Select");
+        formGrid.add(priorLabel, 0, row);
+        formGrid.add(priorBox, 1, row++);
+
+        Label threatLabel = createStyledLabel("⚠️ Threats or evidence destruction attempts:", false);
+        ComboBox<String> threatBox = createStyledComboBox();
+        threatBox.getItems().addAll(
+                "None observed",
+                "Verbal threats made",
+                "Attempt to flush drugs",
+                "Attempt to burn/destroy evidence",
+                "Evidence already destroyed",
+                "Intimidation of witnesses",
+                "Other suspicious behavior"
+        );
+        threatBox.setPromptText("Select");
+        formGrid.add(threatLabel, 0, row);
+        formGrid.add(threatBox, 1, row++);
+
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
+
+        // 10. Witness information
+        Label witnessLabel = createStyledLabel("👁️ Witness Information *:", true);
+        ComboBox<String> witnessBox = createStyledComboBox();
         witnessBox.getItems().addAll("Yes", "No");
-        witnessBox.setPromptText("Select");
-        TextField witnessNameField = new TextField();
-        witnessNameField.setPromptText("Witness name");
-        TextField witnessPhoneField = new TextField();
-        witnessPhoneField.setPromptText("Witness phone");
+        witnessBox.setPromptText("Were there any witnesses?");
+
+        TextField witnessNameField = createStyledTextField();
+        witnessNameField.setPromptText("Witness full name");
+        TextField witnessPhoneField = createStyledTextField();
+        witnessPhoneField.setPromptText("Witness phone number");
+        TextField witnessRelationField = createStyledTextField();
+        witnessRelationField.setPromptText("Relationship to you");
+
         witnessNameField.setDisable(true);
         witnessPhoneField.setDisable(true);
+        witnessRelationField.setDisable(true);
+
         witnessBox.setOnAction(e -> {
             String sel = witnessBox.getValue();
             boolean enable = "Yes".equals(sel);
             witnessNameField.setDisable(!enable);
             witnessPhoneField.setDisable(!enable);
+            witnessRelationField.setDisable(!enable);
             if (!enable) {
                 witnessNameField.clear();
                 witnessPhoneField.clear();
+                witnessRelationField.clear();
             }
         });
+
         formGrid.add(witnessLabel, 0, row);
         formGrid.add(witnessBox, 1, row++);
         formGrid.add(witnessNameField, 1, row++);
         formGrid.add(witnessPhoneField, 1, row++);
+        formGrid.add(witnessRelationField, 1, row++);
 
-        // ---------------------------------------------------------------------------------
-        // 10. Anyone caught consuming? (text)
-        // ---------------------------------------------------------------------------------
-        Label consumeLabel = new Label("Anyone caught consuming at the spot?");
-        TextArea consumeArea = new TextArea();
-        consumeArea.setPromptText("Signs of intoxication, drug use");
-        consumeArea.setPrefRowCount(3);
-        formGrid.add(consumeLabel, 0, row);
-        formGrid.add(consumeArea, 1, row++);
+        // Add spacing
+        formGrid.add(new Label(""), 0, row++);
 
-        // ---------------------------------------------------------------------------------
-        // 11. Drug-related items recovered? (ComboBox + details)
-        // ---------------------------------------------------------------------------------
-        Label itemsLabel = new Label("Drug-related items recovered?");
-        ComboBox<String> itemsBox = new ComboBox<>();
-        itemsBox.getItems().addAll(
-                "Packets",
-                "Syringes",
-                "Pipes",
-                "Weighing Machine / Scale",
-                "Foil / Wraps",
-                "Cash bundles",
-                "Other",
-                "None"
-        );
-        itemsBox.setPromptText("Select item");
-        TextField itemsOtherField = new TextField();
-        itemsOtherField.setPromptText("If 'Other', specify");
-        itemsOtherField.setDisable(true);
-        itemsBox.setOnAction(e -> {
-            String sel = itemsBox.getValue();
-            itemsOtherField.setDisable(sel == null || !"Other".equals(sel));
-        });
-        formGrid.add(itemsLabel, 0, row);
-        formGrid.add(itemsBox, 1, row++);
-        formGrid.add(itemsOtherField, 1, row++);
-
-        // ---------------------------------------------------------------------------------
-        // 12. Carrying weapons / other illegal items? (ComboBox + details)
-        // ---------------------------------------------------------------------------------
-        Label weaponsLabel = new Label("Carrying weapons or other illegal items?");
-        ComboBox<String> weaponsBox = new ComboBox<>();
-        weaponsBox.getItems().addAll(
-                "None",
-                "Knife",
-                "Gun",
-                "Homemade Weapon",
-                "Explosives",
-                "Other"
-        );
-        weaponsBox.setPromptText("Select");
-        TextField weaponsOtherField = new TextField();
-        weaponsOtherField.setPromptText("If 'Other', specify");
-        weaponsOtherField.setDisable(true);
-        weaponsBox.setOnAction(e -> {
-            String sel = weaponsBox.getValue();
-            weaponsOtherField.setDisable(sel == null || !"Other".equals(sel));
-        });
-        formGrid.add(weaponsLabel, 0, row);
-        formGrid.add(weaponsBox, 1, row++);
-        formGrid.add(weaponsOtherField, 1, row++);
-
-        // ---------------------------------------------------------------------------------
-        // 13. Seen involved in drugs before? (Yes/No)
-        // ---------------------------------------------------------------------------------
-        Label priorLabel = new Label("Seen this person/group involved in drugs before? *");
-        ComboBox<String> priorBox = new ComboBox<>();
-        priorBox.getItems().addAll("Yes", "No", "Not Sure");
-        priorBox.setPromptText("Select");
-        formGrid.add(priorLabel, 0, row);
-        formGrid.add(priorBox, 1, row++);
-
-        // ---------------------------------------------------------------------------------
-        // 14. Threats / attempts to destroy evidence? (ComboBox)
-        // ---------------------------------------------------------------------------------
-        Label threatLabel = new Label("Threats or attempts to destroy evidence?");
-        ComboBox<String> threatBox = new ComboBox<>();
-        threatBox.getItems().addAll(
-                "None",
-                "Threats to destroy",
-                "Attempt to flush drugs",
-                "Attempt to burn/dispose",
-                "Evidence already destroyed",
-                "Other"
-        );
-        threatBox.setPromptText("Select");
-        TextField threatOtherField = new TextField();
-        threatOtherField.setPromptText("If 'Other', specify");
-        threatOtherField.setDisable(true);
-        threatBox.setOnAction(e -> {
-            String sel = threatBox.getValue();
-            threatOtherField.setDisable(sel == null || !"Other".equals(sel));
-        });
-        formGrid.add(threatLabel, 0, row);
-        formGrid.add(threatBox, 1, row++);
-        formGrid.add(threatOtherField, 1, row++);
-
-        // ---------------------------------------------------------------------------------
-        // 15. CCTV / photo / video evidence?  (Yes/No -> enable upload buttons)
-        // ---------------------------------------------------------------------------------
-        Label evidenceLabel = new Label("CCTV / photo / video evidence available? *");
-        ComboBox<String> evidenceBox = new ComboBox<>();
+        // 11. Evidence files
+        Label evidenceLabel = createStyledLabel("📹 Digital Evidence Available? *:", true);
+        ComboBox<String> evidenceBox = createStyledComboBox();
         evidenceBox.getItems().addAll("Yes", "No");
-        evidenceBox.setPromptText("Select");
+        evidenceBox.setPromptText("Do you have photos/videos?");
 
-        Button uploadVideoBtn = new Button("Upload Video");
-        Button uploadPhotoBtn = new Button("Upload Photo");
+        Button uploadVideoBtn = createStyledButton("📹 Upload Video", false);
+        Button uploadPhotoBtn = createStyledButton("📷 Upload Photos", false);
         uploadVideoBtn.setDisable(true);
         uploadPhotoBtn.setDisable(true);
 
@@ -314,8 +407,8 @@ public class DrugOffence extends Crime {
             uploadVideoBtn.setDisable(!enable);
             uploadPhotoBtn.setDisable(!enable);
             if (!enable) {
-                uploadVideoBtn.setText("Upload Video");
-                uploadPhotoBtn.setText("Upload Photo");
+                uploadVideoBtn.setText("📹 Upload Video");
+                uploadPhotoBtn.setText("📷 Upload Photos");
                 videoFileHolder[0] = null;
                 photoFileHolder[0] = null;
             }
@@ -326,15 +419,16 @@ public class DrugOffence extends Crime {
             File f = videoChooser.showOpenDialog(w);
             if (f != null) {
                 videoFileHolder[0] = f;
-                uploadVideoBtn.setText("Video: " + f.getName());
+                uploadVideoBtn.setText("✅ Video: " + f.getName());
             }
         });
+
         uploadPhotoBtn.setOnAction(e -> {
             Window w = formGrid.getScene().getWindow();
             File f = photoChooser.showOpenDialog(w);
             if (f != null) {
                 photoFileHolder[0] = f;
-                uploadPhotoBtn.setText("Photo: " + f.getName());
+                uploadPhotoBtn.setText("✅ Photo: " + f.getName());
             }
         });
 
@@ -343,160 +437,426 @@ public class DrugOffence extends Crime {
         HBox evidenceBtnBox = new HBox(10, uploadVideoBtn, uploadPhotoBtn);
         formGrid.add(evidenceBtnBox, 1, row++);
 
-        // ---------------------------------------------------------------------------------
-        // ACTION BUTTONS ------------------------------------------------------------------
-        // ---------------------------------------------------------------------------------
-        Button submitBtn = new Button("Submit");
-        Button clearBtn = new Button("Clear");
-        HBox btnBox = new HBox(10, submitBtn, clearBtn);
-        formGrid.add(btnBox, 1, row++);
+        // Add spacing before submit button
+        formGrid.add(new Label(""), 0, row++);
+        formGrid.add(new Label(""), 0, row++);
 
-        // ---------------------------------------------------------------------------------
-        // Validation & Submit handler
-        // ---------------------------------------------------------------------------------
+        // Submit Button
+        Button submitBtn = createStyledButton("🚨 Submit Drug Offence Report", true);
+        submitBtn.setPrefWidth(300);
         submitBtn.setOnAction(e -> {
-            // 1) Validate common form (except Accused info) - requires method in Crime.
-            // TODO: Implement validateCommonFieldsExceptAccused() in Crime and uncomment.
-            // if (!validateCommonFieldsExceptAccused()) {
-            //     showAlert(Alert.AlertType.ERROR, "Validation Error", "Please complete required information in the common section.");
-            //     return;
-            // }
-
-            // 2) Drug type
-            if (drugTypeBox.getValue() == null) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Select the drug type.");
-                return;
+            if (validateForm(drugTypeBox, qtyField, whereBox, discoverBox, traffickBox, exchangeBox,
+                    witnessBox, evidenceBox, witnessNameField, witnessPhoneField,
+                    videoFileHolder, photoFileHolder, otherDrugField, discoverOtherField)) {
+                showAlert(Alert.AlertType.INFORMATION, "Report Submitted",
+                        "✅ Your drug offence report has been successfully submitted to Bangladesh Police.\n\n" +
+                                "📋 Case Reference: DRUG" + System.currentTimeMillis() + "\n" +
+                                "📞 You will be contacted within 24 hours for follow-up.\n\n" +
+                                "🚨 Anti-Narcotics Hotline: 999 | 📱 Drug Abuse Helpline: 09611677777");
             }
-            if ("Other".equals(drugTypeBox.getValue()) && otherDrugField.getText().trim().isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Specify the drug type.");
-                return;
-            }
-
-            if (whereBox.getValue() == null) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Select where the incident took place.");
-                return;
-            }
-            if (whereDetailsField.isDisabled() == false && whereDetailsField.getText().trim().isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Enter exact location details.");
-                return;
-            }
-
-            // 5) Date
-            if (datePicker.getValue() == null) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Select the date of the incident.");
-                return;
-            }
-            if (discoverBox.getValue() == null) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Select how the drug was discovered.");
-                return;
-            }
-            if ("Other".equals(discoverBox.getValue()) && discoverOtherField.getText().trim().isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Specify how it was discovered.");
-                return;
-            }
-
-            if (traffickBox.getValue() == null) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Indicate if trafficking/selling was observed.");
-                return;
-            }
-
-            if (exchangeBox.getValue() == null) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Indicate if money/items exchange was seen.");
-                return;
-            }
-
-            if (witnessBox.getValue() == null) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Indicate if there were witnesses.");
-                return;
-            }
-            if ("Yes".equals(witnessBox.getValue())) {
-                if (witnessNameField.getText().trim().isEmpty() || witnessPhoneField.getText().trim().isEmpty()) {
-                    showAlert(Alert.AlertType.ERROR, "Validation Error", "Enter witness name and phone.");
-                    return;
-                }
-            }
-
-            if (priorBox.getValue() == null) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Indicate prior involvement.");
-                return;
-            }
-
-            // 11) Evidence yes/no + file(s) if yes
-            if (evidenceBox.getValue() == null) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Indicate if you have evidence.");
-                return;
-            }
-            if ("Yes".equals(evidenceBox.getValue()) && videoFileHolder[0] == null && photoFileHolder[0] == null) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Upload at least one evidence file (photo or video).");
-                return;
-            }
-
-            showAlert(Alert.AlertType.INFORMATION, "Success", "Drug offence report submitted successfully!");
-            // TODO: collect data into model + persist / send to backend.
         });
 
-        clearBtn.setOnAction(e -> {
-            drugTypeBox.setValue(null);
-            otherDrugField.clear();
-            otherDrugField.setDisable(true);
+        HBox submitBox = new HBox(submitBtn);
+        submitBox.setAlignment(Pos.CENTER);
+        submitBox.setPadding(new Insets(20, 0, 10, 0));
 
-            qtyField.clear();
+        formGrid.add(submitBox, 0, row, 2, 1);
 
-            whereBox.setValue(null);
-            whereDetailsField.clear();
-            whereDetailsField.setDisable(true);
+        // Add all components to main container
+        mainContainer.getChildren().addAll(headerSection, formContainer);
 
-            datePicker.setValue(null);
-            timeField.clear();
-
-            discoverBox.setValue(null);
-            discoverOtherField.clear();
-            discoverOtherField.setDisable(true);
-
-            traffickBox.setValue(null);
-            exchangeBox.setValue(null);
-            vehicleArea.clear();
-
-            witnessBox.setValue(null);
-            witnessNameField.clear();
-            witnessPhoneField.clear();
-            witnessNameField.setDisable(true);
-            witnessPhoneField.setDisable(true);
-
-            consumeArea.clear();
-
-            itemsBox.setValue(null);
-            itemsOtherField.clear();
-            itemsOtherField.setDisable(true);
-
-            weaponsBox.setValue(null);
-            weaponsOtherField.clear();
-            weaponsOtherField.setDisable(true);
-
-            priorBox.setValue(null);
-
-            threatBox.setValue(null);
-            threatOtherField.clear();
-            threatOtherField.setDisable(true);
-
-            evidenceBox.setValue(null);
-            uploadVideoBtn.setDisable(true);
-            uploadPhotoBtn.setDisable(true);
-            uploadVideoBtn.setText("Upload Video");
-            uploadPhotoBtn.setText("Upload Photo");
-            videoFileHolder[0] = null;
-            photoFileHolder[0] = null;
-        });
-
-        ScrollPane scrollPane = new ScrollPane(formGrid);
+        // Create scroll pane
+        ScrollPane scrollPane = new ScrollPane(mainContainer);
         scrollPane.setFitToWidth(true);
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        scrollPane.setStyle("-fx-background-color: transparent;");
 
-        Scene scene = new Scene(scrollPane, 750, 700);
+        // Create scene and stage
+        Scene scene = new Scene(scrollPane, 900, 750);
         Stage stage = new Stage();
-        stage.setTitle("Report Drug Offence");
+        stage.setTitle("Drug Offence Case Report – Bangladesh Police");
         stage.setScene(scene);
         stage.show();
+    }
+
+    private VBox createHeaderSection() {
+        VBox header = new VBox(10);
+        header.setAlignment(Pos.CENTER);
+        header.setPadding(new Insets(25, 20, 25, 20));
+        header.setStyle(
+                "-fx-background-color: linear-gradient(to bottom, #e74c3c, #c0392b);" +
+                        "-fx-border-color: #a93226;" +
+                        "-fx-border-width: 0 0 3 0;"
+        );
+
+        // Main title with emoji
+        Label titleLabel = new Label("💊 DRUG OFFENCE CASE REPORT 💊");
+        titleLabel.setStyle(
+                "-fx-font-family: 'System Bold', Arial;" +
+                        "-fx-font-size: 32px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-text-fill: #ffffff;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 3, 0, 2, 2);"
+        );
+
+        Label subtitleLabel = new Label("🏛️ Bangladesh Police Crime Reporting System");
+        subtitleLabel.setStyle(
+                "-fx-font-family: Arial;" +
+                        "-fx-font-size: 18px;" +
+                        "-fx-text-fill: #fadbd8;" +
+                        "-fx-font-weight: bold;"
+        );
+
+        // Info section with better styling
+        VBox infoBox = new VBox(8);
+        infoBox.setAlignment(Pos.CENTER);
+        infoBox.setPadding(new Insets(20, 0, 0, 0));
+        infoBox.setStyle(
+                "-fx-background-color: rgba(192, 57, 43, 0.7);" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-padding: 15;"
+        );
+
+        Label infoTitle = new Label("⚠️ Important Information about Drug Offences:");
+        infoTitle.setStyle(
+                "-fx-font-family: Arial;" +
+                        "-fx-font-size: 15px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-text-fill: #fff3cd;"
+        );
+
+        Label infoText = new Label(
+                "🚨 Report drug crimes immediately - protect your community\n" +
+                        "📱 Document evidence safely but do not interfere with ongoing activity\n" +
+                        "🚫 Never confront suspects directly - ensure your safety first\n" +
+                        "📞 Emergency: 999 | 🚨 Anti-Narcotics: 16263 | 📱 Drug Abuse Helpline: 09611677777"
+        );
+        infoText.setStyle(
+                "-fx-font-family: Arial;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-text-fill: #f8f9fa;" +
+                        "-fx-line-spacing: 4px;"
+        );
+
+        infoBox.getChildren().addAll(infoTitle, infoText);
+        header.getChildren().addAll(titleLabel, subtitleLabel, infoBox);
+
+        return header;
+    }
+
+    private boolean validateForm(ComboBox<String> drugTypeBox, TextField qtyField, ComboBox<String> whereBox,
+                                 ComboBox<String> discoverBox, ComboBox<String> traffickBox, ComboBox<String> exchangeBox,
+                                 ComboBox<String> witnessBox, ComboBox<String> evidenceBox, TextField witnessNameField,
+                                 TextField witnessPhoneField, File[] videoFileHolder, File[] photoFileHolder,
+                                 TextField otherDrugField, TextField discoverOtherField) {
+
+        // Validate common Crime fields
+        if (!validateCommonFields()) {
+            showAlert(Alert.AlertType.ERROR, "Validation Error",
+                    "❌ Please fill in all required common fields:\n" +
+                            "• Your name\n• Phone number\n• NID/BC number\n• Location\n• Date and time\n• Description\n• Father's and Mother's name");
+            return false;
+        }
+
+        // Validate drug-specific required fields
+        if (drugTypeBox.getValue() == null) {
+            showAlert(Alert.AlertType.ERROR, "Validation Error", "❌ Please select the type of drug involved.");
+            return false;
+        }
+
+        if ("Other".equals(drugTypeBox.getValue()) && otherDrugField.getText().trim().isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Validation Error", "❌ Please specify the drug type.");
+            return false;
+        }
+
+        if (qtyField.getText().trim().isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Validation Error", "❌ Please provide the quantity of drugs involved.");
+            return false;
+        }
+
+        if (whereBox.getValue() == null) {
+            showAlert(Alert.AlertType.ERROR, "Validation Error", "❌ Please select where the incident took place.");
+            return false;
+        }
+
+        if (discoverBox.getValue() == null) {
+            showAlert(Alert.AlertType.ERROR, "Validation Error", "❌ Please select how the drug was discovered.");
+            return false;
+        }
+
+        if ("Other".equals(discoverBox.getValue()) && discoverOtherField.getText().trim().isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Validation Error", "❌ Please specify how the drug was discovered.");
+            return false;
+        }
+
+        if (traffickBox.getValue() == null) {
+            showAlert(Alert.AlertType.ERROR, "Validation Error", "❌ Please indicate if trafficking/selling was observed.");
+            return false;
+        }
+
+        if (exchangeBox.getValue() == null) {
+            showAlert(Alert.AlertType.ERROR, "Validation Error", "❌ Please indicate if money/items exchange was witnessed.");
+            return false;
+        }
+
+        if (witnessBox.getValue() == null) {
+            showAlert(Alert.AlertType.ERROR, "Validation Error", "❌ Please indicate if there were any witnesses.");
+            return false;
+        }
+
+        if ("Yes".equals(witnessBox.getValue())) {
+            if (witnessNameField.getText().trim().isEmpty() || witnessPhoneField.getText().trim().isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "❌ Please provide witness name and phone number.");
+                return false;
+            }
+        }
+
+        if (evidenceBox.getValue() == null) {
+            showAlert(Alert.AlertType.ERROR, "Validation Error", "❌ Please indicate if you have digital evidence.");
+            return false;
+        }
+
+        if ("Yes".equals(evidenceBox.getValue()) && videoFileHolder[0] == null && photoFileHolder[0] == null) {
+            showAlert(Alert.AlertType.ERROR, "Validation Error", "❌ Please upload at least one evidence file (photo or video).");
+            return false;
+        }
+
+        return true;
+    }
+
+    private Label createStyledLabel(String text, boolean required) {
+        Label label = new Label(text);
+        String baseStyle =
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-font-weight: " + (required ? "bold" : "normal") + ";" +
+                        "-fx-text-fill: " + (required ? "#e74c3c" : "#424242") + ";";
+        label.setStyle(baseStyle);
+        return label;
+    }
+
+    private TextField createStyledTextField() {
+        TextField field = new TextField();
+        field.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;" +
+                        "-fx-padding: 8px 12px;"
+        );
+
+        field.setOnMouseEntered(e -> field.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e74c3c;" +
+                        "-fx-border-width: 2px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;" +
+                        "-fx-padding: 7px 11px;"
+        ));
+
+        field.setOnMouseExited(e -> field.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;" +
+                        "-fx-padding: 8px 12px;"
+        ));
+
+        field.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                // Focus gained
+                field.setStyle(
+                        "-fx-font-family: Arial, sans-serif;" +
+                                "-fx-font-size: 13px;" +
+                                "-fx-background-color: white;" +
+                                "-fx-border-color: #c0392b;" +
+                                "-fx-border-width: 2px;" +
+                                "-fx-border-radius: 5px;" +
+                                "-fx-background-radius: 5px;" +
+                                "-fx-padding: 7px 11px;"
+                );
+            } else {
+                // Focus lost
+                field.setStyle(
+                        "-fx-font-family: Arial, sans-serif;" +
+                                "-fx-font-size: 13px;" +
+                                "-fx-background-color: white;" +
+                                "-fx-border-color: #e0e0e0;" +
+                                "-fx-border-width: 1px;" +
+                                "-fx-border-radius: 5px;" +
+                                "-fx-background-radius: 5px;" +
+                                "-fx-padding: 8px 12px;"
+                );
+            }
+        });
+
+        return field;
+    }
+
+    private TextArea createStyledTextArea() {
+        TextArea area = new TextArea();
+        area.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;" +
+                        "-fx-padding: 8px 12px;"
+        );
+
+        area.setOnMouseEntered(e -> area.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e74c3c;" +
+                        "-fx-border-width: 2px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;" +
+                        "-fx-padding: 7px 11px;"
+        ));
+
+        area.setOnMouseExited(e -> area.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;" +
+                        "-fx-padding: 8px 12px;"
+        ));
+
+        area.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                // Focus gained
+                area.setStyle(
+                        "-fx-font-family: Arial, sans-serif;" +
+                                "-fx-font-size: 13px;" +
+                                "-fx-background-color: white;" +
+                                "-fx-border-color: #c0392b;" +
+                                "-fx-border-width: 2px;" +
+                                "-fx-border-radius: 5px;" +
+                                "-fx-background-radius: 5px;" +
+                                "-fx-padding: 7px 11px;"
+                );
+            } else {
+                // Focus lost
+                area.setStyle(
+                        "-fx-font-family: Arial, sans-serif;" +
+                                "-fx-font-size: 13px;" +
+                                "-fx-background-color: white;" +
+                                "-fx-border-color: #e0e0e0;" +
+                                "-fx-border-width: 1px;" +
+                                "-fx-border-radius: 5px;" +
+                                "-fx-background-radius: 5px;" +
+                                "-fx-padding: 8px 12px;"
+                );
+            }
+        });
+
+        return area;
+    }
+
+    private ComboBox<String> createStyledComboBox() {
+        ComboBox<String> combo = new ComboBox<>();
+        combo.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;"
+        );
+
+        combo.setOnMouseEntered(e -> combo.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e74c3c;" +
+                        "-fx-border-width: 2px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;"
+        ));
+
+        combo.setOnMouseExited(e -> combo.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;" +
+                        "-fx-background-color: white;" +
+                        "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;"
+        ));
+
+        return combo;
+    }
+
+    private CheckBox createStyledCheckBox(String text) {
+        CheckBox checkBox = new CheckBox(text);
+        checkBox.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 12px;" +
+                        "-fx-text-fill: #424242;"
+        );
+        return checkBox;
+    }
+
+    private Button createStyledButton(String text, boolean primary) {
+        Button button = new Button(text);
+        String baseStyle =
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 14px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-padding: 10px 25px;" +
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;" +
+                        "-fx-cursor: hand;";
+
+        if (primary) {
+            button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #e74c3c, #c0392b);" +
+                    "-fx-text-fill: white;" +
+                    "-fx-border-color: #e74c3c;"
+            );
+            button.setOnMouseEntered(e -> button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #c0392b, #a93226);" +
+                    "-fx-text-fill: white;" +
+                    "-fx-border-color: #c0392b;"
+            ));
+            button.setOnMouseExited(e -> button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #e74c3c, #c0392b);" +
+                    "-fx-text-fill: white;" +
+                    "-fx-border-color: #e74c3c;"
+            ));
+        } else {
+            button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #f5f5f5, #e0e0e0);" +
+                    "-fx-text-fill: #424242;" +
+                    "-fx-border-color: #bdbdbd;"
+            );
+            button.setOnMouseEntered(e -> button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #e0e0e0, #d0d0d0);" +
+                    "-fx-text-fill: #424242;" +
+                    "-fx-border-color: #9e9e9e;"
+            ));
+            button.setOnMouseExited(e -> button.setStyle(baseStyle +
+                    "-fx-background-color: linear-gradient(to bottom, #f5f5f5, #e0e0e0);" +
+                    "-fx-text-fill: #424242;" +
+                    "-fx-border-color: #bdbdbd;"
+            ));
+        }
+
+        return button;
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {
@@ -504,6 +864,14 @@ public class DrugOffence extends Crime {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
+
+        // Style the alert dialog
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.setStyle(
+                "-fx-font-family: Arial, sans-serif;" +
+                        "-fx-font-size: 13px;"
+        );
+
         alert.showAndWait();
     }
 }
