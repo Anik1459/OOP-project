@@ -343,6 +343,16 @@ public class UserDashboard extends Application {
                 e.printStackTrace();
             }
         }
+        else if(crimeType.equals("Drug Offense")){
+            System.out.println("Opening Drug Offense form...");
+            try {
+                new DrugOffence().absMethod();
+                System.out.println("Drug Offense form opened successfully!"); // Debug line
+            } catch (Exception e) {
+                System.err.println("Error opening Drug Offense form: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
         else {
             System.out.println("No handler for crime type: " + crimeType); // Debug line
         }
