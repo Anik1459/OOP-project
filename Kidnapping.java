@@ -1,4 +1,4 @@
-package org.example.java;
+package src.main;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -9,9 +9,15 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import src.main.Crime;
 
 public class Kidnapping extends Crime {
-
+    ToggleGroup ransomGroup;
+    ToggleGroup previousGroup;
+    ToggleGroup amberGroup;
+    ToggleGroup witnessGroup;
+    ToggleGroup kidnapperKnownGroup;
+    ToggleGroup genderGroup;
     @Override
     public void absMethod() {
         System.out.println("Kidnapping.absMethod() called!"); // Debug line
@@ -56,7 +62,7 @@ public class Kidnapping extends Crime {
 
         // Victim's Gender
         Label genderLabel = createStyledLabel("⚧️ Victim's Gender *:", true);
-        ToggleGroup genderGroup = new ToggleGroup();
+       genderGroup = new ToggleGroup();
         RadioButton maleRadio = createStyledRadioButton("Male");
         RadioButton femaleRadio = createStyledRadioButton("Female");
         RadioButton otherRadio = createStyledRadioButton("Other");
@@ -123,7 +129,7 @@ public class Kidnapping extends Crime {
         formGrid.add(kidnapperSectionLabel, 0, row++, 2, 1);
 
         Label kidnapperKnownLabel = createStyledLabel("❓ Is the kidnapper known to you?", false);
-        ToggleGroup kidnapperKnownGroup = new ToggleGroup();
+        kidnapperKnownGroup = new ToggleGroup();
         RadioButton kidnapperYes = createStyledRadioButton("Yes, known person");
         RadioButton kidnapperNo = createStyledRadioButton("No, stranger");
         RadioButton kidnapperUnsure = createStyledRadioButton("Unsure");
@@ -165,7 +171,7 @@ public class Kidnapping extends Crime {
         formGrid.add(witnessSectionLabel, 0, row++, 2, 1);
 
         Label witnessAvailableLabel = createStyledLabel("🗣️ Are there any witnesses?", false);
-        ToggleGroup witnessGroup = new ToggleGroup();
+         witnessGroup = new ToggleGroup();
         RadioButton witnessYes = createStyledRadioButton("Yes");
         RadioButton witnessNo = createStyledRadioButton("No");
         RadioButton witnessUnsure = createStyledRadioButton("Not sure");
@@ -198,7 +204,7 @@ public class Kidnapping extends Crime {
         formGrid.add(alertSectionLabel, 0, row++, 2, 1);
 
         Label amberAlertLabel = createStyledLabel("📢 Should police initiate an Amber Alert?", false);
-        ToggleGroup amberGroup = new ToggleGroup();
+         amberGroup = new ToggleGroup();
         RadioButton amberYes = createStyledRadioButton("Yes, urgent alert needed");
         RadioButton amberNo = createStyledRadioButton("No, not necessary");
         RadioButton amberUnsure = createStyledRadioButton("Let police decide");
@@ -230,7 +236,7 @@ public class Kidnapping extends Crime {
         formGrid.add(ransomSectionLabel, 0, row++, 2, 1);
 
         Label ransomDemandLabel = createStyledLabel("💸 Have you received any ransom demands?", false);
-        ToggleGroup ransomGroup = new ToggleGroup();
+        ransomGroup = new ToggleGroup();
         RadioButton ransomYes = createStyledRadioButton("Yes");
         RadioButton ransomNo = createStyledRadioButton("No");
         ransomYes.setToggleGroup(ransomGroup);
@@ -273,7 +279,7 @@ public class Kidnapping extends Crime {
         formGrid.add(additionalSectionLabel, 0, row++, 2, 1);
 
         Label previousReportLabel = createStyledLabel("📝 Has this been reported elsewhere?", false);
-        ToggleGroup previousGroup = new ToggleGroup();
+         previousGroup = new ToggleGroup();
         RadioButton previousYes = createStyledRadioButton("Yes, reported earlier");
         RadioButton previousNo = createStyledRadioButton("No, first report");
         previousYes.setToggleGroup(previousGroup);
@@ -332,6 +338,65 @@ public class Kidnapping extends Crime {
                 return;
             }
             showAlert(Alert.AlertType.INFORMATION, "Success", "Kidnapping report submitted successfully! Police will prioritize this case.");
+            DatabaseHelper.insertKidnappingReport(
+                    nameField.getText().trim(),
+                    fatherNameField.getText().trim(),
+                    motherNameField.getText().trim(),
+                    complainantPhoneField.getText().trim(),
+                    locationField.getText().trim(),
+                    datePicker.getValue().toString(), // Converts LocalDate to String
+                    timeField.getText().trim(),
+                    descriptionArea.getText().trim(),
+                    nidBcField.getText().trim(),
+                    photopath, // Make sure photopath is a String storing the selected file path
+
+                    accusedName.getText().trim(),
+                    accusedPhone.getText().trim(),
+                    accusedEmail.getText().trim(),
+                    accusedAddress.getText().trim(),
+
+                    // Victim Info
+                    Integer.parseInt(ageField.getText().trim()), // Convert age text to int
+                    getSelectedGender(), // You'll implement this to get selected gender string
+                    heightField.getText().trim(),
+                    clothingArea.getText().trim(),
+                    marksArea.getText().trim(),
+
+                    // Last Known Info
+                    lastLocationField.getText().trim(),
+                    lastSeenTimeField.getText().trim(),
+                    lastActivityArea.getText().trim(),
+
+                    // Kidnapper Info
+                    getKidnapperKnownValue(), // e.g., "Yes, known person", "No, stranger", or "Unsure"
+                    kidnapperDescArea.getText().trim(),
+                    relationshipBox.getValue(),
+
+                    // Witness Info
+                    getWitnessAvailableValue(), // e.g., "Yes", "No", or "Not sure"
+                    witnessDetailsArea.getText().trim(),
+
+                    // Emergency Alert
+                    getAmberAlertValue(), // e.g., "Yes, urgent alert needed", "No, not necessary", or "Let police decide"
+                    urgencyBox.getValue(),
+
+                    // Ransom Info
+                    getRansomDemandValue(), // "Yes" or "No"
+                    ransomDetailsArea.getText().trim(),
+                    ransomAmountField.getText().trim(),
+
+                    // Additional Info
+                    getPreviousReportValue(), // "Yes, reported earlier" or "No, first report"
+                    motiveMoney.isSelected() ? 1 : 0,
+                    motiveRevenge.isSelected() ? 1 : 0,
+                    motiveFamily.isSelected() ? 1 : 0,
+                    motivePolitical.isSelected() ? 1 : 0,
+                    motiveUnknown.isSelected() ? 1 : 0,
+                    motiveOther.isSelected() ? 1 : 0,
+
+                    actionRequestArea.getText().trim()
+            );
+
         });
 
         // Clear button logic
@@ -635,4 +700,40 @@ public class Kidnapping extends Crime {
 
         alert.showAndWait();
     }
+    // Example for gender
+    private String getSelectedGender() {
+        RadioButton selected = (RadioButton) genderGroup.getSelectedToggle();
+        return selected != null ? selected.getText() : "";
+    }
+
+    // Similarly for kidnapper known
+    private String getKidnapperKnownValue() {
+        RadioButton selected = (RadioButton) kidnapperKnownGroup.getSelectedToggle();
+        return selected != null ? selected.getText() : "";
+    }
+
+    // For witness availability
+    private String getWitnessAvailableValue() {
+        RadioButton selected = (RadioButton) witnessGroup.getSelectedToggle();
+        return selected != null ? selected.getText() : "";
+    }
+
+    // For amber alert
+    private String getAmberAlertValue() {
+        RadioButton selected = (RadioButton) amberGroup.getSelectedToggle();
+        return selected != null ? selected.getText() : "";
+    }
+
+    // For ransom demand
+    private String getRansomDemandValue() {
+        RadioButton selected = (RadioButton) ransomGroup.getSelectedToggle();
+        return selected != null ? selected.getText() : "";
+    }
+
+    // For previous report
+    private String getPreviousReportValue() {
+        RadioButton selected = (RadioButton) previousGroup.getSelectedToggle();
+        return selected != null ? selected.getText() : "";
+    }
+
 }
