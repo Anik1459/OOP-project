@@ -7,7 +7,33 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
+
 public class MoneyLaundering extends Crime {
+    public MoneyLaundering() {
+        // Ensure table exists when creating this object
+        DatabaseHelper.createMoneyLaunderingTableIfNotExists();
+    }
+    private String getSelectedCheckboxes(CheckBox... checkboxes) {
+        StringBuilder result = new StringBuilder();
+        for (CheckBox cb : checkboxes) {
+            if (cb.isSelected()) {
+                if (result.length() > 0) {
+                    result.append(", ");
+                }
+                result.append(cb.getText());
+            }
+        }
+        return result.toString();
+    }
+
+    private String getSelectedRadioButton(ToggleGroup group) {
+        Toggle selected = group.getSelectedToggle();
+        if (selected != null) {
+            return ((RadioButton) selected).getText();
+        }
+        return "";
+    }
+
 
     @Override
     public void absMethod() {
@@ -314,6 +340,7 @@ public class MoneyLaundering extends Crime {
         buttonBox.setAlignment(Pos.CENTER);
         formGrid.add(buttonBox, 1, row++);
 
+
         // Submit button logic
         submitBtn.setOnAction(e -> {
             if (!validateCommonFields()) {
@@ -327,8 +354,90 @@ public class MoneyLaundering extends Crime {
                 showAlert(Alert.AlertType.ERROR, "Validation Error", "Please fill the total amount and select at least one source of funds.");
                 return;
             }
-            showAlert(Alert.AlertType.INFORMATION, "Success", "Money Laundering report submitted successfully! Financial investigation unit will prioritize this case.");
-        });
+            try {
+                // Collect fund sources
+                String fundSources = getSelectedCheckboxes(cashCB, wireCB, cryptoCB, checkCB,
+                        businessCB, investmentCB, loanCB, otherSourceCB);
+
+                // Collect evidence
+                String availableEvidence = getSelectedCheckboxes(receiptsEv, statementsEv, logsEv, emailsEv,
+                        contractsEv, photosEv, recordingsEv, otherEv);
+
+                // Get date values
+                String startDateStr = startDatePicker.getValue() != null ? startDatePicker.getValue().toString() : "";
+                String endDateStr = endDatePicker.getValue() != null ? endDatePicker.getValue().toString() : "";
+                String incidentDateStr = datePicker.getValue() != null ? datePicker.getValue().toString() : "";
+
+                // Insert into database
+                boolean success = DatabaseHelper.insertMoneyLaunderingReport(
+                        // Common fields
+                        nameField.getText().trim(),
+                        fatherNameField.getText().trim(),
+                        motherNameField.getText().trim(),
+                        complainantPhoneField.getText().trim(),
+                        nidBcField.getText().trim(),
+                        locationField.getText().trim(),
+                        incidentDateStr,
+                        timeField.getText().trim(),
+                        descriptionArea.getText().trim(),
+
+                        // Financial information
+                        amountField.getText().trim(),
+                        currencyBox.getValue() != null ? currencyBox.getValue() : "",
+
+                        // Fund sources
+                        fundSources,
+                        otherSourceArea.getText().trim(),
+
+                        // Account information
+                        bankDetailsArea.getText().trim(),
+                        walletArea.getText().trim(),
+                        jurisdictionArea.getText().trim(),
+
+                        // Entities
+                        shellCompaniesArea.getText().trim(),
+                        beneficialOwnerArea.getText().trim(),
+
+                        // Transaction patterns
+                        startDateStr,
+                        endDateStr,
+                        frequencyBox.getValue() != null ? frequencyBox.getValue() : "",
+                        transactionDetailsArea.getText().trim(),
+
+                        // Evidence
+                        availableEvidence,
+                        evidenceDescArea.getText().trim(),
+
+                        // Law enforcement
+                        getSelectedRadioButton(assetFreezeGroup),
+                        getSelectedRadioButton(subpoenaGroup),
+                        actionRequestArea.getText().trim(),
+
+                        // Additional info
+                        getSelectedRadioButton(reportedGroup),
+                        urgencyBox.getValue() != null ? urgencyBox.getValue() : "",
+                        additionalInfoArea.getText().trim()
+                );
+
+                if (success) {
+                    showAlert(Alert.AlertType.INFORMATION, "Success",
+                            "Money Laundering report submitted successfully!\n" +
+                                    "Report ID will be sent to your phone.\n" +
+                                    "Financial investigation unit will prioritize this case.");
+
+                    // Optionally close the window or clear the form
+                    // ((Stage) submitBtn.getScene().getWindow()).close();
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Database Error",
+                            "Failed to submit report. Please try again or contact support.");
+                }
+
+            } catch (Exception ex) {
+                showAlert(Alert.AlertType.ERROR, "Error",
+                        "An unexpected error occurred: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+          });
 
         // Clear button logic
         clearBtn.setOnAction(e -> {
