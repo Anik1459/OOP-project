@@ -1,4 +1,4 @@
-package src.main;
+package org.example.java;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -12,6 +12,9 @@ import javafx.stage.Stage;
 
 public class Fraud extends Crime {
 
+    public Fraud(){
+        DatabaseHelper.createFraudTableIfNoExists();
+    }
     @Override
     public void absMethod() {
         // Create main container
@@ -213,7 +216,72 @@ public class Fraud extends Crime {
                 showAlert(Alert.AlertType.ERROR, "Validation Error", "Please specify the 'Other' fraud type.");
                 return;
             }
-            showAlert(Alert.AlertType.INFORMATION, "Success", "Fraud report submitted successfully!");
+            if ("Other".equals(fraudTypeBox.getValue()) && otherFraudField.getText().trim().isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please specify the 'Other' fraud type.");
+                return;
+            }
+            String typeOfFraud       = fraudTypeBox.getValue().equals("Other")
+                    ? otherFraudField.getText().trim()
+                    : fraudTypeBox.getValue();
+            String modeOfComm        = "";
+            if (phoneCB.isSelected())  modeOfComm += "Phone,";
+            if (smsCB.isSelected())    modeOfComm += "SMS,";
+            if (socialCB.isSelected()) modeOfComm += "WhatsApp,";
+            if (emailCB.isSelected())  modeOfComm += "Email,";
+            if (meetCB.isSelected())   modeOfComm += "In-person,";
+            if (otherCommCB.isSelected()) modeOfComm += otherCommCB.getText() + ",";
+            // trim trailing comma
+            if (!modeOfComm.isEmpty()) modeOfComm = modeOfComm.substring(0, modeOfComm.length()-1);
+
+            String transactionAmount  = yesTrans.isSelected() ? amountField.getText().trim() : "";
+            String transactionMethod  = yesTrans.isSelected() && methodBox.getValue() != null
+                    ? methodBox.getValue()
+                    : "";
+
+            String documents = "";
+            if (doc1.isSelected()) documents += "Contract,";
+            if (doc2.isSelected()) documents += "Receipt,";
+            if (doc3.isSelected()) documents += "Statement,";
+            if (doc4.isSelected()) documents += "Cheque,";
+            if (doc5.isSelected()) documents += "Chat,";
+            if (doc6.isSelected()) documents += "Photo,";
+            if (doc7.isSelected()) documents += "Witness,";
+            if (!documents.isEmpty()) documents = documents.substring(0, documents.length()-1);
+
+            String accusedPromise      = yesPromise.isSelected() ? "Yes" : "No";
+            String reportedElsewhere   = yesReported.isSelected() ? "Yes" : "No";
+            String actionRequested     = actionArea.getText().trim();
+
+            // 3) Call the helper
+            boolean ok = DatabaseHelper.insertFraudReport(
+                    nameField.getText().trim(),         // complainantName
+                    fatherNameField.getText().trim(),   // fatherName
+                    motherNameField.getText().trim(),   // motherName
+                    complainantPhoneField.getText().trim(), // complaintPhone
+                    nidBcField.getText().trim(),        // nidBc
+                    locationField.getText().trim(),     // location
+                    datePicker.getValue().toString(),   // dateOfIncident
+                    descriptionArea.getText().trim(),   // descriptionOfIncident
+                    accusedName.getText().trim(),       // accusedName
+                    accusedPhone.getText().trim(),      // accusedPhone
+                    accusedEmail.getText().trim(),      // accusedEmail
+                    accusedAddress.getText().trim(),    // accusedAddress
+                    typeOfFraud,                        // typeOfFraud
+                    modeOfComm,                         // modeOfCommunication
+                    transactionAmount,                  // transactionAmount
+                    transactionMethod,                  // transactionMethod
+                    documents,                          // supportingDocuments
+                    accusedPromise,                     // hasAccusedPromisedToReturn
+                    actionRequested                     // actionRequestedFromPolice
+            );
+
+            // 4) Feedback to user
+            if (ok) {
+                showAlert(Alert.AlertType.INFORMATION, "Success", "Fraud report submitted successfully!");
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Database Error", "Failed to save your report. Please try again.");
+            }
+
         });
 
         // Clear button logic
