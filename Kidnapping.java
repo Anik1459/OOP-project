@@ -1,4 +1,4 @@
-package src.main;
+package org.example.java;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -9,7 +9,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-import src.main.Crime;
+
 
 public class Kidnapping extends Crime {
     ToggleGroup ransomGroup;
@@ -18,6 +18,29 @@ public class Kidnapping extends Crime {
     ToggleGroup witnessGroup;
     ToggleGroup kidnapperKnownGroup;
     ToggleGroup genderGroup;
+
+    public Kidnapping() {
+        DatabaseHelper.createKidnappingTableIfNotExists();
+    }
+    private String getSelectedCheckboxes(CheckBox... checkboxes) {
+        StringBuilder result = new StringBuilder();
+        for (CheckBox cb : checkboxes) {
+            if (cb.isSelected()) {
+                if (result.length() > 0) {
+                    result.append(", ");
+                }
+                result.append(cb.getText());
+            }
+        }
+        return result.toString();
+    }
+    private String getSelectedRadioButton(ToggleGroup group) {
+        Toggle selected = group.getSelectedToggle();
+        if (selected != null) {
+            return ((RadioButton) selected).getText();
+        }
+        return "";
+    }
     @Override
     public void absMethod() {
         System.out.println("Kidnapping.absMethod() called!"); // Debug line
@@ -62,7 +85,7 @@ public class Kidnapping extends Crime {
 
         // Victim's Gender
         Label genderLabel = createStyledLabel("⚧️ Victim's Gender *:", true);
-       genderGroup = new ToggleGroup();
+        genderGroup = new ToggleGroup();
         RadioButton maleRadio = createStyledRadioButton("Male");
         RadioButton femaleRadio = createStyledRadioButton("Female");
         RadioButton otherRadio = createStyledRadioButton("Other");
@@ -171,7 +194,7 @@ public class Kidnapping extends Crime {
         formGrid.add(witnessSectionLabel, 0, row++, 2, 1);
 
         Label witnessAvailableLabel = createStyledLabel("🗣️ Are there any witnesses?", false);
-         witnessGroup = new ToggleGroup();
+        witnessGroup = new ToggleGroup();
         RadioButton witnessYes = createStyledRadioButton("Yes");
         RadioButton witnessNo = createStyledRadioButton("No");
         RadioButton witnessUnsure = createStyledRadioButton("Not sure");
@@ -204,7 +227,7 @@ public class Kidnapping extends Crime {
         formGrid.add(alertSectionLabel, 0, row++, 2, 1);
 
         Label amberAlertLabel = createStyledLabel("📢 Should police initiate an Amber Alert?", false);
-         amberGroup = new ToggleGroup();
+        amberGroup = new ToggleGroup();
         RadioButton amberYes = createStyledRadioButton("Yes, urgent alert needed");
         RadioButton amberNo = createStyledRadioButton("No, not necessary");
         RadioButton amberUnsure = createStyledRadioButton("Let police decide");
@@ -279,7 +302,7 @@ public class Kidnapping extends Crime {
         formGrid.add(additionalSectionLabel, 0, row++, 2, 1);
 
         Label previousReportLabel = createStyledLabel("📝 Has this been reported elsewhere?", false);
-         previousGroup = new ToggleGroup();
+        previousGroup = new ToggleGroup();
         RadioButton previousYes = createStyledRadioButton("Yes, reported earlier");
         RadioButton previousNo = createStyledRadioButton("No, first report");
         previousYes.setToggleGroup(previousGroup);
