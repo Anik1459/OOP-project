@@ -668,13 +668,260 @@ public class DatabaseHelper {
         }
     }
 
+    // UPDATED: Create Drug Offense Table (40 columns total including id, report_date, status)
+    public static void createDrugOffenseTableIfNotExists() {
+        String sql = "CREATE TABLE IF NOT EXISTS drug_offense_reports (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
 
-    // Initialize all tables
+                // Common complainant information
+                "complainant_name TEXT NOT NULL," +
+                "father_name TEXT," +
+                "mother_name TEXT," +
+                "complainant_phone TEXT NOT NULL," +
+                "nid_bc TEXT," +
+                "location TEXT NOT NULL," +
+                "incident_date TEXT NOT NULL," +
+                "incident_time TEXT NOT NULL," +
+                "description TEXT," +
+                "photo_path TEXT," +
+
+                // Accused Information
+                "accused_name TEXT," +
+                "accused_phone TEXT," +
+                "accused_email TEXT," +
+                "accused_address TEXT," +
+
+                // Drug Information
+                "drug_type TEXT NOT NULL," +
+                "other_drug_details TEXT," +
+                "quantity TEXT NOT NULL," +
+                "packaging_type TEXT," +
+
+                // Incident Details
+                "incident_types TEXT," +
+                "location_type TEXT NOT NULL," +
+                "location_details TEXT," +
+                "discovery_method TEXT NOT NULL," +
+                "discovery_other_details TEXT," +
+
+                // Persons Involved
+                "persons_count TEXT," +
+                "age_groups TEXT," +
+                "genders TEXT," +
+
+                // Drug Activity
+                "trafficking_observed TEXT NOT NULL," +
+                "money_exchange_witnessed TEXT NOT NULL," +
+                "transaction_amount TEXT," +
+
+                // Evidence and Items
+                "recovered_items TEXT," +
+                "weapons_found TEXT," +
+
+                // Suspicious Activities
+                "suspicious_vehicles_persons TEXT," +
+                "prior_involvement TEXT NOT NULL," +
+                "threats_evidence_destruction TEXT," +
+
+                // Witness Information
+                "witness_available TEXT NOT NULL," +
+                "witness_name TEXT," +
+                "witness_phone TEXT," +
+                "witness_relationship TEXT," +
+
+                // Digital Evidence (combined into single field)
+                "digital_evidence_available TEXT NOT NULL," +
+                "video_evidence_path TEXT," +
+
+                // System fields
+                "report_date DATETIME DEFAULT CURRENT_TIMESTAMP," +
+                "status TEXT DEFAULT 'pending'," +
+
+                // Foreign key constraint
+                "FOREIGN KEY (complainant_phone) REFERENCES users(phone)" +
+                ")";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+            System.out.println("Drug offense reports table created successfully!");
+        } catch (SQLException e) {
+            System.err.println("Error creating drug offense table: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // NEW: Insert Drug Offense Report
+    public static boolean insertDrugOffenseReport(
+            // Common fields (10 parameters)
+            String complainantName, String fatherName, String motherName,
+            String complainantPhone, String nidBc, String location,
+            String incidentDate, String incidentTime, String description, String photoPath,
+
+            // Accused information (4 parameters) 
+            String accusedName, String accusedPhone, String accusedEmail, String accusedAddress,
+
+            // Drug information (4 parameters)
+            String drugType, String otherDrugDetails, String quantity, String packagingType,
+
+            // Incident details (5 parameters)
+            String incidentTypes, String locationType, String locationDetails,
+            String discoveryMethod, String discoveryOtherDetails,
+
+            // Persons involved (3 parameters)
+            String personsCount, String ageGroups, String genders,
+
+            // Drug activity (3 parameters)
+            String traffickingObserved, String moneyExchangeWitnessed, String transactionAmount,
+
+            // Evidence and items (2 parameters)
+            String recoveredItems, String weaponsFound,
+
+            // Suspicious activities (3 parameters)
+            String suspiciousVehiclesPersons, String priorInvolvement, String threatsEvidenceDestruction,
+
+            // Witness information (4 parameters)
+            String witnessAvailable, String witnessName, String witnessPhone, String witnessRelationship,
+
+            // Digital evidence (2 parameters) - REDUCED FROM 3 TO 2
+            String digitalEvidenceAvailable, String evidenceFilePath // Combined video and photo paths
+    ) {
+        // Ensure table exists before inserting
+        createDrugOffenseTableIfNotExists();
+
+        // SQL with exactly 39 columns (40 values including id but excluding auto-generated fields)
+        String sql = "INSERT INTO drug_offense_reports (" +
+                "complainant_name, father_name, mother_name, complainant_phone, nid_bc, " +
+                "location, incident_date, incident_time, description, photo_path, " +
+                "accused_name, accused_phone, accused_email, accused_address, " +
+                "drug_type, other_drug_details, quantity, packaging_type, " +
+                "incident_types, location_type, location_details, discovery_method, discovery_other_details, " +
+                "persons_count, age_groups, genders, " +
+                "trafficking_observed, money_exchange_witnessed, transaction_amount, " +
+                "recovered_items, weapons_found, " +
+                "suspicious_vehicles_persons, prior_involvement, threats_evidence_destruction, " +
+                "witness_available, witness_name, witness_phone, witness_relationship, " +
+                "digital_evidence_available, video_evidence_path" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // Set exactly 40 parameters (1-40)
+            pstmt.setString(1, complainantName);
+            pstmt.setString(2, fatherName);
+            pstmt.setString(3, motherName);
+            pstmt.setString(4, complainantPhone);
+            pstmt.setString(5, nidBc);
+            pstmt.setString(6, location);
+            pstmt.setString(7, incidentDate);
+            pstmt.setString(8, incidentTime);
+            pstmt.setString(9, description);
+            pstmt.setString(10, photoPath);
+
+            pstmt.setString(11, accusedName);
+            pstmt.setString(12, accusedPhone);
+            pstmt.setString(13, accusedEmail);
+            pstmt.setString(14, accusedAddress);
+
+            pstmt.setString(15, drugType);
+            pstmt.setString(16, otherDrugDetails);
+            pstmt.setString(17, quantity);
+            pstmt.setString(18, packagingType);
+
+            pstmt.setString(19, incidentTypes);
+            pstmt.setString(20, locationType);
+            pstmt.setString(21, locationDetails);
+            pstmt.setString(22, discoveryMethod);
+            pstmt.setString(23, discoveryOtherDetails);
+
+            pstmt.setString(24, personsCount);
+            pstmt.setString(25, ageGroups);
+            pstmt.setString(26, genders);
+
+            pstmt.setString(27, traffickingObserved);
+            pstmt.setString(28, moneyExchangeWitnessed);
+            pstmt.setString(29, transactionAmount);
+
+            pstmt.setString(30, recoveredItems);
+            pstmt.setString(31, weaponsFound);
+
+            pstmt.setString(32, suspiciousVehiclesPersons);
+            pstmt.setString(33, priorInvolvement);
+            pstmt.setString(34, threatsEvidenceDestruction);
+
+            pstmt.setString(35, witnessAvailable);
+            pstmt.setString(36, witnessName);
+            pstmt.setString(37, witnessPhone);
+            pstmt.setString(38, witnessRelationship);
+
+            pstmt.setString(39, digitalEvidenceAvailable);
+            pstmt.setString(40, evidenceFilePath); // Combined evidence file path
+
+            int result = pstmt.executeUpdate();
+            System.out.println("Drug offense report inserted successfully!");
+            return result > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error inserting drug offense report: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // NEW: Get Drug Offense Reports by Phone
+    public static ResultSet getDrugOffenseReportsByPhone(String phone) {
+        String sql = "SELECT * FROM drug_offense_reports WHERE complainant_phone = ? ORDER BY report_date DESC";
+        try {
+            Connection conn = DriverManager.getConnection(DB_URL);
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, phone);
+            return pstmt.executeQuery();
+        } catch (SQLException e) {
+            System.err.println("Error retrieving drug offense reports: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // NEW: Get All Drug Offense Reports
+    public static ResultSet getAllDrugOffenseReports() {
+        String sql = "SELECT * FROM drug_offense_reports ORDER BY report_date DESC";
+        try {
+            Connection conn = DriverManager.getConnection(DB_URL);
+            Statement stmt = conn.createStatement();
+            return stmt.executeQuery(sql);
+        } catch (SQLException e) {
+            System.err.println("Error retrieving all drug offense reports: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // NEW: Update Drug Offense Report Status
+    public static boolean updateDrugOffenseReportStatus(int reportId, String status) {
+        String sql = "UPDATE drug_offense_reports SET status = ? WHERE id = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, status);
+            pstmt.setInt(2, reportId);
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating drug offense report status: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Update Initialize all tables method
     public static void initializeDatabase() {
         createTableIfNotExists();
         createReportsTableIfNotExists();
+        createFraudTableIfNoExists();
         createMoneyLaunderingTableIfNotExists();
         createKidnappingTableIfNotExists();
+        createDrugOffenseTableIfNotExists();
         System.out.println("Database initialized successfully!");
     }
 }
