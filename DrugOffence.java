@@ -16,6 +16,31 @@ import java.io.File;
 
 public class DrugOffence extends Crime {
 
+    // Add constructor to create table
+    public DrugOffence() {
+        DatabaseHelper.createDrugOffenseTableIfNotExists();
+    }
+
+    // Helper method to get selected checkboxes
+    private String getSelectedCheckboxes(CheckBox... checkboxes) {
+        StringBuilder result = new StringBuilder();
+        for (CheckBox cb : checkboxes) {
+            if (cb.isSelected()) {
+                if (result.length() > 0) result.append(", ");
+                result.append(cb.getText());
+            }
+        }
+        return result.toString();
+    }
+
+    // Helper method to get selected radio button from ToggleGroup
+    private String getSelectedRadioButton(ToggleGroup group) {
+        if (group.getSelectedToggle() != null) {
+            return ((RadioButton) group.getSelectedToggle()).getText();
+        }
+        return "";
+    }
+
     @Override
     public void absMethod() {
         // Create main container
@@ -441,18 +466,103 @@ public class DrugOffence extends Crime {
         formGrid.add(new Label(""), 0, row++);
         formGrid.add(new Label(""), 0, row++);
 
-        // Submit Button
+        // Submit Button - UPDATED WITH CORRECTED DATABASE STORAGE
         Button submitBtn = createStyledButton("🚨 Submit Drug Offence Report", true);
         submitBtn.setPrefWidth(300);
         submitBtn.setOnAction(e -> {
             if (validateForm(drugTypeBox, qtyField, whereBox, discoverBox, traffickBox, exchangeBox,
                     witnessBox, evidenceBox, witnessNameField, witnessPhoneField,
                     videoFileHolder, photoFileHolder, otherDrugField, discoverOtherField)) {
-                showAlert(Alert.AlertType.INFORMATION, "Report Submitted",
-                        "✅ Your drug offence report has been successfully submitted to Bangladesh Police.\n\n" +
-                                "📋 Case Reference: DRUG" + System.currentTimeMillis() + "\n" +
-                                "📞 You will be contacted within 24 hours for follow-up.\n\n" +
-                                "🚨 Anti-Narcotics Hotline: 999 | 📱 Drug Abuse Helpline: 09611677777");
+
+                // Collect all form data
+                String incidentTypes = getSelectedCheckboxes(possession, selling, consumption, manufacturing, smuggling, distribution);
+                String ageGroups = getSelectedCheckboxes(minors, youth, adults, elderly);
+                String genders = getSelectedCheckboxes(male, female, transgender);
+                String recoveredItems = getSelectedCheckboxes(packets, syringes, pipes, scales, foil, cash, chemicals, equipment);
+
+                // Combine evidence file paths
+                String evidenceFilePath = "";
+                if (videoFileHolder[0] != null && photoFileHolder[0] != null) {
+                    evidenceFilePath = "Video: " + videoFileHolder[0].getAbsolutePath() + " | Photo: " + photoFileHolder[0].getAbsolutePath();
+                } else if (videoFileHolder[0] != null) {
+                    evidenceFilePath = videoFileHolder[0].getAbsolutePath();
+                } else if (photoFileHolder[0] != null) {
+                    evidenceFilePath = photoFileHolder[0].getAbsolutePath();
+                }
+
+                // Store in database with corrected parameter count
+                boolean success = DatabaseHelper.insertDrugOffenseReport(
+                        // Common fields (10 parameters)
+                        nameField.getText().trim(),
+                        fatherNameField.getText().trim(),
+                        motherNameField.getText().trim(),
+                        complainantPhoneField.getText().trim(),
+                        nidBcField.getText().trim(),
+                        locationField.getText().trim(),
+                        datePicker.getValue() != null ? datePicker.getValue().toString() : "",
+                        timeField.getText().trim(),
+                        descriptionArea.getText().trim(),
+                        photopath != null ? photopath : "",
+
+                        // Accused information (4 parameters)
+                        accusedName.getText().trim(),
+                        accusedPhone.getText().trim(),
+                        accusedEmail.getText().trim(),
+                        accusedAddress.getText().trim(),
+
+                        // Drug information (4 parameters)
+                        drugTypeBox.getValue() != null ? drugTypeBox.getValue() : "",
+                        otherDrugField.getText().trim(),
+                        qtyField.getText().trim(),
+                        packagingBox.getValue() != null ? packagingBox.getValue() : "",
+
+                        // Incident details (5 parameters)
+                        incidentTypes,
+                        whereBox.getValue() != null ? whereBox.getValue() : "",
+                        whereDetailsField.getText().trim(),
+                        discoverBox.getValue() != null ? discoverBox.getValue() : "",
+                        discoverOtherField.getText().trim(),
+
+                        // Persons involved (3 parameters)
+                        personsCountBox.getValue() != null ? personsCountBox.getValue() : "",
+                        ageGroups,
+                        genders,
+
+                        // Drug activity (3 parameters)
+                        traffickBox.getValue() != null ? traffickBox.getValue() : "",
+                        exchangeBox.getValue() != null ? exchangeBox.getValue() : "",
+                        priceField.getText().trim(),
+
+                        // Evidence and items (2 parameters)
+                        recoveredItems,
+                        weaponsBox.getValue() != null ? weaponsBox.getValue() : "",
+
+                        // Suspicious activities (3 parameters)
+                        vehicleArea.getText().trim(),
+                        priorBox.getValue() != null ? priorBox.getValue() : "",
+                        threatBox.getValue() != null ? threatBox.getValue() : "",
+
+                        // Witness information (4 parameters)
+                        witnessBox.getValue() != null ? witnessBox.getValue() : "",
+                        witnessNameField.getText().trim(),
+                        witnessPhoneField.getText().trim(),
+                        witnessRelationField.getText().trim(),
+
+                        // Digital evidence (2 parameters)
+                        evidenceBox.getValue() != null ? evidenceBox.getValue() : "",
+                        evidenceFilePath // Combined evidence file path
+                );
+
+                if (success) {
+                    showAlert(Alert.AlertType.INFORMATION, "Report Submitted",
+                            "✅ Your drug offence report has been successfully submitted to Bangladesh Police.\n\n" +
+                                    "📋 Case Reference: DRUG" + System.currentTimeMillis() + "\n" +
+                                    "📞 You will be contacted within 24 hours for follow-up.\n\n" +
+                                    "🚨 Anti-Narcotics Hotline: 999 | 📱 Drug Abuse Helpline: 09611677777");
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Database Error",
+                            "❌ There was an error saving your report. Please try again or contact support.");
+                }
             }
         });
 
