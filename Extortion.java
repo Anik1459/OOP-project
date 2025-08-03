@@ -15,6 +15,31 @@ import java.io.File;
 
 public class Extortion extends Crime {
 
+    // Add constructor to create table
+    public Extortion() {
+        DatabaseHelper.createExtortionTableIfNotExists();
+    }
+
+    // Helper method to get selected checkboxes
+    private String getSelectedCheckboxes(CheckBox... checkboxes) {
+        StringBuilder result = new StringBuilder();
+        for (CheckBox cb : checkboxes) {
+            if (cb.isSelected()) {
+                if (result.length() > 0) result.append(", ");
+                result.append(cb.getText());
+            }
+        }
+        return result.toString();
+    }
+
+    // Helper method to get selected radio button from ToggleGroup
+    private String getSelectedRadioButton(ToggleGroup group) {
+        if (group.getSelectedToggle() != null) {
+            return ((RadioButton) group.getSelectedToggle()).getText();
+        }
+        return "";
+    }
+
     @Override
     public void absMethod() {
         // Create main container
@@ -97,6 +122,8 @@ public class Extortion extends Crime {
         Label evidenceFileLabel = new Label("No files selected");
         evidenceFileLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #666666;");
 
+        final File[] evidenceFile = new File[1];
+
         evidenceButton.setOnAction(e -> {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Select Evidence Files");
@@ -108,6 +135,7 @@ public class Extortion extends Crime {
             );
             File selectedFile = fileChooser.showOpenDialog(null);
             if (selectedFile != null) {
+                evidenceFile[0] = selectedFile;
                 evidenceFileLabel.setText(selectedFile.getName());
             }
         });
@@ -413,16 +441,87 @@ public class Extortion extends Crime {
         formGrid.add(new Label(""), 0, row++);
         formGrid.add(new Label(""), 0, row++);
 
-        // Submit Button
+        // Submit Button - UPDATED WITH DATABASE STORAGE
         Button submitButton = createStyledButton("🚨 Submit Extortion Report", true);
         submitButton.setPrefWidth(300);
         submitButton.setOnAction(e -> {
             if (validateForm(extortionTypeBox, threatDetailsArea)) {
-                showAlert(Alert.AlertType.INFORMATION, "Report Submitted",
-                        "✅ Your extortion case report has been successfully submitted to Bangladesh Police.\n\n" +
-                                "📋 Case Reference: EXT" + System.currentTimeMillis() + "\n" +
-                                "📞 You will be contacted within 24 hours for follow-up.\n\n" +
-                                "🚨 If you are in immediate danger, please call 999 immediately!");
+
+                // Collect all form data
+                String threatTypes = getSelectedCheckboxes(verbalThreat, writtenThreat, digitalThreat, physicalThreat);
+                String demandType = getSelectedRadioButton(demandGroup);
+                String hasDeadlineText = getSelectedRadioButton(deadlineGroup);
+                String extorterKnown = getSelectedRadioButton(extorterGroup);
+                String hasWitnessText = getSelectedRadioButton(witnessGroup);
+                String reportedBeforeText = getSelectedRadioButton(reportGroup);
+                String paidBeforeText = getSelectedRadioButton(paymentGroup);
+                String needsProtection = getSelectedRadioButton(protectionGroup);
+                String protectionTypes = getSelectedCheckboxes(restrainingOrder, policeProtection, witnessProtection, familyProtection);
+
+                // Store in database
+                boolean success = DatabaseHelper.insertExtortionReport(
+                        // Common fields
+                        nameField.getText().trim(),
+                        fatherNameField.getText().trim(),
+                        motherNameField.getText().trim(),
+                        complainantPhoneField.getText().trim(),
+                        nidBcField.getText().trim(),
+                        locationField.getText().trim(),
+                        datePicker.getValue() != null ? datePicker.getValue().toString() : "",
+                        timeField.getText().trim(),
+                        descriptionArea.getText().trim(),
+                        photopath != null ? photopath : "",
+
+                        // Extortion specific
+                        extortionTypeBox.getValue() != null ? extortionTypeBox.getValue() : "",
+                        threatTypes,
+                        threatDetailsArea.getText().trim(),
+                        evidenceFile[0] != null ? evidenceFile[0].getAbsolutePath() : "",
+
+                        // Demands
+                        demandType,
+                        amountField.getText().trim(),
+                        demandDetailsArea.getText().trim(),
+
+                        // Deadline
+                        hasDeadlineText,
+                        deadlineDatePicker.getValue() != null ? deadlineDatePicker.getValue().toString() : "",
+                        deadlineTimeField.getText().trim(),
+
+                        // Extorter info
+                        extorterKnown,
+                        extorterNameField.getText().trim(),
+                        extorterContactField.getText().trim(),
+                        extorterDescArea.getText().trim(),
+                        relationshipBox.getValue() != null ? relationshipBox.getValue() : "",
+
+                        // Witnesses
+                        hasWitnessText,
+                        witness1Field.getText().trim(),
+                        witness2Field.getText().trim(),
+
+                        // Prior history
+                        reportedBeforeText,
+                        reportDetailsArea.getText().trim(),
+                        paidBeforeText,
+                        paymentDetailsArea.getText().trim(),
+
+                        // Protection
+                        needsProtection,
+                        protectionTypes,
+                        protectionReasonArea.getText().trim()
+                );
+
+                if (success) {
+                    showAlert(Alert.AlertType.INFORMATION, "Report Submitted",
+                            "✅ Your extortion case report has been successfully submitted to Bangladesh Police.\n\n" +
+                                    "📋 Case Reference: EXT" + System.currentTimeMillis() + "\n" +
+                                    "📞 You will be contacted within 24 hours for follow-up.\n\n" +
+                                    "🚨 If you are in immediate danger, please call 999 immediately!");
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Database Error",
+                            "❌ There was an error saving your report. Please try again or contact support.");
+                }
             }
         });
 
