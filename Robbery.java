@@ -1,4 +1,4 @@
-package src.main;
+package org.example.java;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -14,6 +14,11 @@ import javafx.stage.Window;
 import java.io.File;
 
 public class Robbery extends Crime {
+
+    // Add constructor to create table
+    public Robbery() {
+        DatabaseHelper.createRobberyTableIfNotExists();
+    }
 
     @Override
     public void absMethod() {
@@ -219,14 +224,14 @@ public class Robbery extends Crime {
         buttonBox.setAlignment(Pos.CENTER);
         formGrid.add(buttonBox, 1, row++);
 
-        // Submit validation
+        // Submit validation and database insertion
         submitBtn.setOnAction(e -> {
-            if(!validateCommonFields())
-            {
+            if (!validateCommonFields()) {
                 showAlert(Alert.AlertType.ERROR, "Validation Error", "Please fill all required common fields.");
                 return;
             }
-            // Simple mandatory checks example
+            
+            // Simple mandatory checks
             if (locationField.getText().trim().isEmpty()) {
                 showAlert(Alert.AlertType.ERROR, "Validation Error", "Please enter the robbery location.");
                 return;
@@ -264,8 +269,56 @@ public class Robbery extends Crime {
                 showAlert(Alert.AlertType.ERROR, "Validation Error", "Please upload the video footage.");
                 return;
             }
-            // All validations passed
-            showAlert(Alert.AlertType.INFORMATION, "Success", "Robbery report submitted successfully!");
+
+            // All validations passed - Insert into database
+            boolean success = DatabaseHelper.insertRobberyReport(
+                    // Common fields
+                    nameField.getText().trim(),
+                    fatherNameField.getText().trim(),
+                    motherNameField.getText().trim(),
+                    complainantPhoneField.getText().trim(),
+                    nidBcField.getText().trim(),
+                    locationField.getText().trim(),
+                    datePicker.getValue() != null ? datePicker.getValue().toString() : "",
+                    timeField.getText().trim(),
+                    descriptionArea.getText().trim(),
+                    photopath != null ? photopath : "",
+
+                    // Robbery specific
+                    locationField.getText().trim(), // robbery location
+                    getSelectedRadioButton(armedGroup), // "Armed" or "Unarmed"
+                    weaponTypeField.getText().trim(),
+                    numberField.getText().trim(),
+                    descArea.getText().trim(),
+
+                    // Incident details
+                    actionsArea.getText().trim(),
+                    itemsArea.getText().trim(),
+                    injuryArea.getText().trim(),
+                    vehicleField.getText().trim(),
+
+                    // Witness and evidence
+                    witnessArea.getText().trim(),
+                    suspiciousArea.getText().trim(),
+                    getSelectedRadioButton(reportedGroup),
+                    getSelectedRadioButton(cctvGroup),
+                    cctvYes.isSelected() && !uploadVideoBtn.getText().equals("📤 Upload Video") ? 
+                        uploadVideoBtn.getText().replace("✅ Uploaded: ", "") : "",
+
+                    // Additional info
+                    targetedField.getText().trim(),
+                    threatsArea.getText().trim()
+            );
+
+            if (success) {
+                showAlert(Alert.AlertType.INFORMATION, "Success", "Robbery report submitted successfully! Police will investigate this case.");
+                
+                // Close the window after successful submission
+                Stage stage = (Stage) submitBtn.getScene().getWindow();
+                stage.close();
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Database Error", "Failed to submit robbery report. Please try again.");
+            }
         });
 
         // Cancel button just closes the form window
@@ -483,5 +536,14 @@ public class Robbery extends Crime {
         );
 
         alert.showAndWait();
+    }
+
+    // Helper method to get selected radio button from ToggleGroup
+    private String getSelectedRadioButton(ToggleGroup group) {
+        Toggle selected = group.getSelectedToggle();
+        if (selected != null) {
+            return ((RadioButton) selected).getText();
+        }
+        return "";
     }
 }
