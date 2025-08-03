@@ -914,7 +914,416 @@ public class DatabaseHelper {
         }
     }
 
-    // Update Initialize all tables method
+    // ==================== EXTORTION METHODS ====================
+
+    // NEW: Create Extortion Table
+    public static void createExtortionTableIfNotExists() {
+        String sql = "CREATE TABLE IF NOT EXISTS extortion_reports (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                
+                // Common complainant information
+                "complainant_name TEXT NOT NULL," +
+                "father_name TEXT," +
+                "mother_name TEXT," +
+                "complainant_phone TEXT NOT NULL," +
+                "nid_bc TEXT," +
+                "location TEXT NOT NULL," +
+                "incident_date TEXT NOT NULL," +
+                "incident_time TEXT NOT NULL," +
+                "description TEXT," +
+                "photo_path TEXT," +
+                
+                // Extortion specific information
+                "extortion_type TEXT NOT NULL," +
+                "threat_types TEXT," + // comma-separated values
+                "threat_details TEXT," +
+                "evidence_file_path TEXT," +
+                
+                // Demands information
+                "demand_type TEXT," +
+                "money_amount TEXT," +
+                "demand_details TEXT," +
+                
+                // Deadline information
+                "has_deadline TEXT," +
+                "deadline_date TEXT," +
+                "deadline_time TEXT," +
+                
+                // Extorter information
+                "extorter_known TEXT," +
+                "extorter_name TEXT," +
+                "extorter_contact TEXT," +
+                "extorter_description TEXT," +
+                "relationship_to_victim TEXT," +
+                
+                // Witness information
+                "has_witnesses TEXT," +
+                "witness1_details TEXT," +
+                "witness2_details TEXT," +
+                
+                // Prior history
+                "reported_before TEXT," +
+                "previous_report_details TEXT," +
+                "paid_before TEXT," +
+                "payment_details TEXT," +
+                
+                // Protection request
+                "needs_protection TEXT," +
+                "protection_types TEXT," +
+                "protection_reason TEXT," +
+                
+                // System fields
+                "report_date DATETIME DEFAULT CURRENT_TIMESTAMP," +
+                "status TEXT DEFAULT 'pending'," +
+                
+                // Foreign key
+                "FOREIGN KEY (complainant_phone) REFERENCES users(phone)" +
+                ")";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+            System.out.println("Extortion reports table created successfully!");
+        } catch (SQLException e) {
+            System.err.println("Error creating extortion table: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // NEW: Insert Extortion Report
+    public static boolean insertExtortionReport(
+            // Common fields
+            String complainantName, String fatherName, String motherName,
+            String complainantPhone, String nidBc, String location,
+            String incidentDate, String incidentTime, String description, String photoPath,
+            
+            // Extortion specific
+            String extortionType, String threatTypes, String threatDetails, String evidenceFilePath,
+            
+            // Demands
+            String demandType, String moneyAmount, String demandDetails,
+            
+            // Deadline
+            String hasDeadline, String deadlineDate, String deadlineTime,
+            
+            // Extorter info
+            String extorterKnown, String extorterName, String extorterContact,
+            String extorterDescription, String relationshipToVictim,
+            
+            // Witnesses
+            String hasWitnesses, String witness1Details, String witness2Details,
+            
+            // Prior history
+            String reportedBefore, String previousReportDetails, String paidBefore, String paymentDetails,
+            
+            // Protection
+            String needsProtection, String protectionTypes, String protectionReason
+    ) {
+        // Ensure table exists
+        createExtortionTableIfNotExists();
+
+        String sql = "INSERT INTO extortion_reports (" +
+                "complainant_name, father_name, mother_name, complainant_phone, nid_bc, " +
+                "location, incident_date, incident_time, description, photo_path, " +
+                "extortion_type, threat_types, threat_details, evidence_file_path, " +
+                "demand_type, money_amount, demand_details, " +
+                "has_deadline, deadline_date, deadline_time, " +
+                "extorter_known, extorter_name, extorter_contact, extorter_description, relationship_to_victim, " +
+                "has_witnesses, witness1_details, witness2_details, " +
+                "reported_before, previous_report_details, paid_before, payment_details, " +
+                "needs_protection, protection_types, protection_reason" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // Set parameters
+            pstmt.setString(1, complainantName);
+            pstmt.setString(2, fatherName);
+            pstmt.setString(3, motherName);
+            pstmt.setString(4, complainantPhone);
+            pstmt.setString(5, nidBc);
+            pstmt.setString(6, location);
+            pstmt.setString(7, incidentDate);
+            pstmt.setString(8, incidentTime);
+            pstmt.setString(9, description);
+            pstmt.setString(10, photoPath);
+            
+            pstmt.setString(11, extortionType);
+            pstmt.setString(12, threatTypes);
+            pstmt.setString(13, threatDetails);
+            pstmt.setString(14, evidenceFilePath);
+            
+            pstmt.setString(15, demandType);
+            pstmt.setString(16, moneyAmount);
+            pstmt.setString(17, demandDetails);
+            
+            pstmt.setString(18, hasDeadline);
+            pstmt.setString(19, deadlineDate);
+            pstmt.setString(20, deadlineTime);
+            
+            pstmt.setString(21, extorterKnown);
+            pstmt.setString(22, extorterName);
+            pstmt.setString(23, extorterContact);
+            pstmt.setString(24, extorterDescription);
+            pstmt.setString(25, relationshipToVictim);
+            
+            pstmt.setString(26, hasWitnesses);
+            pstmt.setString(27, witness1Details);
+            pstmt.setString(28, witness2Details);
+            
+            pstmt.setString(29, reportedBefore);
+            pstmt.setString(30, previousReportDetails);
+            pstmt.setString(31, paidBefore);
+            pstmt.setString(32, paymentDetails);
+            
+            pstmt.setString(33, needsProtection);
+            pstmt.setString(34, protectionTypes);
+            pstmt.setString(35, protectionReason);
+
+            int result = pstmt.executeUpdate();
+            System.out.println("Extortion report inserted successfully!");
+            return result > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error inserting extortion report: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // NEW: Get Extortion Reports by Phone
+    public static ResultSet getExtortionReportsByPhone(String phone) {
+        String sql = "SELECT * FROM extortion_reports WHERE complainant_phone = ? ORDER BY report_date DESC";
+        try {
+            Connection conn = DriverManager.getConnection(DB_URL);
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, phone);
+            return pstmt.executeQuery();
+        } catch (SQLException e) {
+            System.err.println("Error retrieving extortion reports: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // NEW: Get All Extortion Reports
+    public static ResultSet getAllExtortionReports() {
+        String sql = "SELECT * FROM extortion_reports ORDER BY report_date DESC";
+        try {
+            Connection conn = DriverManager.getConnection(DB_URL);
+            Statement stmt = conn.createStatement();
+            return stmt.executeQuery(sql);
+        } catch (SQLException e) {
+            System.err.println("Error retrieving all extortion reports: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // NEW: Update Extortion Report Status
+    public static boolean updateExtortionReportStatus(int reportId, String status) {
+        String sql = "UPDATE extortion_reports SET status = ? WHERE id = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, status);
+            pstmt.setInt(2, reportId);
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating extortion report status: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Update Initialize all tables method - ADD EXTORTION TABLE CREATION
+
+    // ==================== ROBBERY METHODS ====================
+
+    // NEW: Create Robbery Table
+    public static void createRobberyTableIfNotExists() {
+        String sql = "CREATE TABLE IF NOT EXISTS robbery_reports (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                
+                // Common complainant information
+                "complainant_name TEXT NOT NULL," +
+                "father_name TEXT," +
+                "mother_name TEXT," +
+                "complainant_phone TEXT NOT NULL," +
+                "nid_bc TEXT," +
+                "location TEXT NOT NULL," +
+                "incident_date TEXT NOT NULL," +
+                "incident_time TEXT NOT NULL," +
+                "description TEXT," +
+                "photo_path TEXT," +
+                
+                // Robbery specific information
+                "robbery_location TEXT NOT NULL," +
+                "armed_robbery TEXT NOT NULL," + // "Armed" or "Unarmed"
+                "weapon_type TEXT," +
+                "number_of_robbers TEXT NOT NULL," +
+                "robber_description TEXT NOT NULL," +
+                
+                // Incident details
+                "robber_actions TEXT," +
+                "items_stolen TEXT NOT NULL," +
+                "injuries_occurred TEXT," +
+                "vehicle_used TEXT," +
+                
+                // Witness and evidence
+                "witnesses_available TEXT," +
+                "suspicious_activities TEXT," +
+                "reported_elsewhere TEXT," +
+                "cctv_available TEXT," +
+                "video_file_path TEXT," +
+                
+                // Additional information
+                "targeted_or_random TEXT," +
+                "threats_received TEXT," +
+                
+                // System fields
+                "report_date DATETIME DEFAULT CURRENT_TIMESTAMP," +
+                "status TEXT DEFAULT 'pending'," +
+                
+                // Foreign key
+                "FOREIGN KEY (complainant_phone) REFERENCES users(phone)" +
+                ")";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+            System.out.println("Robbery reports table created successfully!");
+        } catch (SQLException e) {
+            System.err.println("Error creating robbery table: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // NEW: Insert Robbery Report
+    public static boolean insertRobberyReport(
+            // Common fields
+            String complainantName, String fatherName, String motherName,
+            String complainantPhone, String nidBc, String location,
+            String incidentDate, String incidentTime, String description, String photoPath,
+            
+            // Robbery specific
+            String robberyLocation, String armedRobbery, String weaponType,
+            String numberOfRobbers, String robberDescription,
+            
+            // Incident details
+            String robberActions, String itemsStolen, String injuriesOccurred, String vehicleUsed,
+            
+            // Witness and evidence
+            String witnessesAvailable, String suspiciousActivities, String reportedElsewhere,
+            String cctvAvailable, String videoFilePath,
+            
+            // Additional info
+            String targetedOrRandom, String threatsReceived
+    ) {
+        // Ensure table exists
+        createRobberyTableIfNotExists();
+
+        String sql = "INSERT INTO robbery_reports (" +
+                "complainant_name, father_name, mother_name, complainant_phone, nid_bc, " +
+                "location, incident_date, incident_time, description, photo_path, " +
+                "robbery_location, armed_robbery, weapon_type, number_of_robbers, robber_description, " +
+                "robber_actions, items_stolen, injuries_occurred, vehicle_used, " +
+                "witnesses_available, suspicious_activities, reported_elsewhere, cctv_available, video_file_path, " +
+                "targeted_or_random, threats_received" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // Set parameters
+            pstmt.setString(1, complainantName);
+            pstmt.setString(2, fatherName);
+            pstmt.setString(3, motherName);
+            pstmt.setString(4, complainantPhone);
+            pstmt.setString(5, nidBc);
+            pstmt.setString(6, location);
+            pstmt.setString(7, incidentDate);
+            pstmt.setString(8, incidentTime);
+            pstmt.setString(9, description);
+            pstmt.setString(10, photoPath);
+            
+            pstmt.setString(11, robberyLocation);
+            pstmt.setString(12, armedRobbery);
+            pstmt.setString(13, weaponType);
+            pstmt.setString(14, numberOfRobbers);
+            pstmt.setString(15, robberDescription);
+            
+            pstmt.setString(16, robberActions);
+            pstmt.setString(17, itemsStolen);
+            pstmt.setString(18, injuriesOccurred);
+            pstmt.setString(19, vehicleUsed);
+            
+            pstmt.setString(20, witnessesAvailable);
+            pstmt.setString(21, suspiciousActivities);
+            pstmt.setString(22, reportedElsewhere);
+            pstmt.setString(23, cctvAvailable);
+            pstmt.setString(24, videoFilePath);
+            
+            pstmt.setString(25, targetedOrRandom);
+            pstmt.setString(26, threatsReceived);
+
+            int result = pstmt.executeUpdate();
+            System.out.println("Robbery report inserted successfully!");
+            return result > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error inserting robbery report: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // NEW: Get Robbery Reports by Phone
+    public static ResultSet getRobberyReportsByPhone(String phone) {
+        String sql = "SELECT * FROM robbery_reports WHERE complainant_phone = ? ORDER BY report_date DESC";
+        try {
+            Connection conn = DriverManager.getConnection(DB_URL);
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, phone);
+            return pstmt.executeQuery();
+        } catch (SQLException e) {
+            System.err.println("Error retrieving robbery reports: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // NEW: Get All Robbery Reports
+    public static ResultSet getAllRobberyReports() {
+        String sql = "SELECT * FROM robbery_reports ORDER BY report_date DESC";
+        try {
+            Connection conn = DriverManager.getConnection(DB_URL);
+            Statement stmt = conn.createStatement();
+            return stmt.executeQuery(sql);
+        } catch (SQLException e) {
+            System.err.println("Error retrieving all robbery reports: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // NEW: Update Robbery Report Status
+    public static boolean updateRobberyReportStatus(int reportId, String status) {
+        String sql = "UPDATE robbery_reports SET status = ? WHERE id = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, status);
+            pstmt.setInt(2, reportId);
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating robbery report status: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Update Initialize all tables method - ADD ROBBERY TABLE CREATION
     public static void initializeDatabase() {
         createTableIfNotExists();
         createReportsTableIfNotExists();
@@ -922,6 +1331,8 @@ public class DatabaseHelper {
         createMoneyLaunderingTableIfNotExists();
         createKidnappingTableIfNotExists();
         createDrugOffenseTableIfNotExists();
+        createExtortionTableIfNotExists();
+        createRobberyTableIfNotExists(); // ADD THIS LINE
         System.out.println("Database initialized successfully!");
     }
 }
