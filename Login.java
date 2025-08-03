@@ -1,4 +1,4 @@
-package com.example.oopproject;
+package org.example.java; // Change from com.example.oopproject
 
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
@@ -20,7 +20,8 @@ import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.util.Duration;
 
-import static com.example.oopproject.PasswordChange.showAlert;
+// Import the static method from PasswordChange in the correct package
+import static org.example.java.PasswordChange.showAlert; // Change the import
 
 public class Login extends Application {
 
@@ -31,7 +32,6 @@ public class Login extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("🇧🇩 Login - Bangladesh Portal");
         primaryStage.setScene(createLoginScene(primaryStage));
-        // Root layout
         primaryStage.setMinWidth(350);
         primaryStage.setMinHeight(500);
         primaryStage.show();
@@ -85,6 +85,7 @@ public class Login extends Application {
         passwordField = new PasswordField();
         passwordField.setPromptText("🔒 Enter your password");
         styleInput(passwordField);
+        
         Hyperlink forgotPassword = new Hyperlink("Forgot Password?");
         forgotPassword.setTextFill(Color.LIGHTGOLDENRODYELLOW);
         forgotPassword.setFont(Font.font("Arial", FontWeight.BOLD, 16));
@@ -94,12 +95,11 @@ public class Login extends Application {
         forgotPassword.setOnAction(e -> {
             new PasswordChange().start(primaryStage);
         });
+        
         Button loginButton = createStyledButton("🔓 Sign In", "#28a745", "#218838");
 
         Label signUpPrompt = new Label("Don't have an account?");
         signUpPrompt.setTextFill(Color.WHITE);
-
-
 
         Button signUpButton = new Button("👉 Sign Up");
         signUpButton.setStyle(
@@ -121,18 +121,34 @@ public class Login extends Application {
             }
             else if(password.equals("I am Admin"))
             {
-                //Swicth to Admin Dashboard
+                //Switch to Admin Dashboard
+                showAlert(Alert.AlertType.INFORMATION, "🔑 Admin Access Granted!");
+                // TODO: Navigate to Admin Dashboard when created
+                // new AdminDashboard().start(primaryStage);
             }
             else if(password.equals("I am Investigation Officer"))
             {
                 //Switch to Officer Dashboard
+                showAlert(Alert.AlertType.INFORMATION, "👮 Officer Access Granted!");
+                // TODO: Navigate to Officer Dashboard when created
+                // new OfficerDashboard().start(primaryStage);
             }
-         else {
+            else {
                 boolean success = DatabaseHelper.validateLogin(phone, password);
 
                 if (success) {
                     showAlert(Alert.AlertType.INFORMATION, "✅ Login successful!");
-                    // We Will go to next scene from here
+                    
+                    // Navigate to UserDashboard - ADD THIS LINE
+                    try {
+                        new UserDashboard().start(primaryStage);
+                        System.out.println("UserDashboard launched successfully!");
+                    } catch (Exception ex) {
+                        System.err.println("Error launching UserDashboard: " + ex.getMessage());
+                        ex.printStackTrace();
+                        showAlert(Alert.AlertType.ERROR, "Failed to load dashboard. Please try again.");
+                    }
+                    
                 } else {
                     showAlert(Alert.AlertType.ERROR, "❌ Invalid phone or password.");
                 }
@@ -140,7 +156,6 @@ public class Login extends Application {
         });
 
         signUpButton.setOnAction(e -> {
-
             Alert alert = new Alert(Alert.AlertType.INFORMATION, "Redirect to Sign Up scene...");
             alert.showAndWait();
             new SignUp().start(primaryStage);
@@ -149,7 +164,7 @@ public class Login extends Application {
         HBox bottomBox = new HBox(5, signUpPrompt, signUpButton);
         bottomBox.setAlignment(Pos.CENTER);
 
-        form.getChildren().addAll(phoneField, passwordField, loginButton,forgotPassword, bottomBox);
+        form.getChildren().addAll(phoneField, passwordField, loginButton, forgotPassword, bottomBox);
 
         // Animation
         FadeTransition fade = new FadeTransition(Duration.seconds(1), form);
