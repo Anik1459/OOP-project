@@ -1,4 +1,4 @@
-package com.example.oopproject;
+package org.example.java; // Change from com.example.oopproject
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -38,9 +38,6 @@ public class PasswordChange extends Application {
         );
         root.setBackground(new Background(new BackgroundFill(background, CornerRadii.EMPTY, Insets.EMPTY)));
 
-        // Flag icon in circle
-
-
         Label title = new Label("🔐 Reset Your Password");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 26));
         title.setTextFill(Color.WHITE);
@@ -49,8 +46,7 @@ public class PasswordChange extends Application {
         subtitle.setFont(Font.font("Arial", FontWeight.MEDIUM, 14));
         subtitle.setTextFill(Color.LIGHTGRAY);
 
-        VBox header = new VBox(10,
-                title, subtitle);
+        VBox header = new VBox(10, title, subtitle);
         header.setAlignment(Pos.CENTER);
 
         // Form input fields
@@ -82,13 +78,12 @@ public class PasswordChange extends Application {
                 return;
             }
 
-            if(pass1.length() < 6)
-            {
-                showAlert(Alert.AlertType.ERROR , "Minimun 6 characters needed.");
+            if(pass1.length() < 6) {
+                showAlert(Alert.AlertType.ERROR , "Minimum 6 characters needed.");
                 return;
             }
 
-
+            // Fix: Use the correct method name
             boolean success = DatabaseHelper.updatePasswordByPhone(phone, pass1);
 
             if (success) {
@@ -97,9 +92,7 @@ public class PasswordChange extends Application {
             } else {
                 showAlert(Alert.AlertType.ERROR, "Failed to reset password. Phone number not found.");
             }
-
         });
-
 
         // Back to Login
         Hyperlink backToLogin = new Hyperlink("← Back to Login");
@@ -128,9 +121,8 @@ public class PasswordChange extends Application {
         primaryStage.show();
     }
 
-   static void showAlert(Alert.AlertType alertType, String s) {
-
-        Alert alert = new Alert(alertType,s);
+   public static void showAlert(Alert.AlertType alertType, String s) {
+        Alert alert = new Alert(alertType, s);
         alert.showAndWait();
     }
 
