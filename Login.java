@@ -1,4 +1,4 @@
-package org.example.java; // Change from com.example.oopproject
+package src.main; // Change from com.example.oopproject
 
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
@@ -20,8 +20,10 @@ import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.util.Duration;
 
+import static src.main.PasswordChange.showAlert;
+
 // Import the static method from PasswordChange in the correct package
-import static org.example.java.PasswordChange.showAlert; // Change the import
+ // Change the import
 
 public class Login extends Application {
 
@@ -85,7 +87,7 @@ public class Login extends Application {
         passwordField = new PasswordField();
         passwordField.setPromptText("🔒 Enter your password");
         styleInput(passwordField);
-        
+
         Hyperlink forgotPassword = new Hyperlink("Forgot Password?");
         forgotPassword.setTextFill(Color.LIGHTGOLDENRODYELLOW);
         forgotPassword.setFont(Font.font("Arial", FontWeight.BOLD, 16));
@@ -95,7 +97,7 @@ public class Login extends Application {
         forgotPassword.setOnAction(e -> {
             new PasswordChange().start(primaryStage);
         });
-        
+
         Button loginButton = createStyledButton("🔓 Sign In", "#28a745", "#218838");
 
         Label signUpPrompt = new Label("Don't have an account?");
@@ -123,22 +125,22 @@ public class Login extends Application {
             {
                 //Switch to Admin Dashboard
                 showAlert(Alert.AlertType.INFORMATION, "🔑 Admin Access Granted!");
-                // TODO: Navigate to Admin Dashboard when created
-                // new AdminDashboard().start(primaryStage);
+
+                 new AdminDashboard().start(primaryStage);
             }
             else if(password.equals("I am Investigation Officer"))
             {
                 //Switch to Officer Dashboard
                 showAlert(Alert.AlertType.INFORMATION, "👮 Officer Access Granted!");
-                // TODO: Navigate to Officer Dashboard when created
-                // new OfficerDashboard().start(primaryStage);
+
+               new InvestigatorDashboard().start(primaryStage);
             }
             else {
                 boolean success = DatabaseHelper.validateLogin(phone, password);
 
                 if (success) {
                     showAlert(Alert.AlertType.INFORMATION, "✅ Login successful!");
-                    
+
                     // Navigate to UserDashboard - ADD THIS LINE
                     try {
                         new UserDashboard().start(primaryStage);
@@ -148,7 +150,7 @@ public class Login extends Application {
                         ex.printStackTrace();
                         showAlert(Alert.AlertType.ERROR, "Failed to load dashboard. Please try again.");
                     }
-                    
+
                 } else {
                     showAlert(Alert.AlertType.ERROR, "❌ Invalid phone or password.");
                 }
