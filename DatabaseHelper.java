@@ -1,4 +1,4 @@
-package org.example.java;
+package src.main;
 
 import java.sql.*;
 
@@ -758,7 +758,7 @@ public class DatabaseHelper {
             String complainantPhone, String nidBc, String location,
             String incidentDate, String incidentTime, String description, String photoPath,
 
-            // Accused information (4 parameters) 
+            // Accused information (4 parameters)
             String accusedName, String accusedPhone, String accusedEmail, String accusedAddress,
 
             // Drug information (4 parameters)
@@ -920,7 +920,7 @@ public class DatabaseHelper {
     public static void createExtortionTableIfNotExists() {
         String sql = "CREATE TABLE IF NOT EXISTS extortion_reports (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                
+
                 // Common complainant information
                 "complainant_name TEXT NOT NULL," +
                 "father_name TEXT," +
@@ -932,50 +932,50 @@ public class DatabaseHelper {
                 "incident_time TEXT NOT NULL," +
                 "description TEXT," +
                 "photo_path TEXT," +
-                
+
                 // Extortion specific information
                 "extortion_type TEXT NOT NULL," +
                 "threat_types TEXT," + // comma-separated values
                 "threat_details TEXT," +
                 "evidence_file_path TEXT," +
-                
+
                 // Demands information
                 "demand_type TEXT," +
                 "money_amount TEXT," +
                 "demand_details TEXT," +
-                
+
                 // Deadline information
                 "has_deadline TEXT," +
                 "deadline_date TEXT," +
                 "deadline_time TEXT," +
-                
+
                 // Extorter information
                 "extorter_known TEXT," +
                 "extorter_name TEXT," +
                 "extorter_contact TEXT," +
                 "extorter_description TEXT," +
                 "relationship_to_victim TEXT," +
-                
+
                 // Witness information
                 "has_witnesses TEXT," +
                 "witness1_details TEXT," +
                 "witness2_details TEXT," +
-                
+
                 // Prior history
                 "reported_before TEXT," +
                 "previous_report_details TEXT," +
                 "paid_before TEXT," +
                 "payment_details TEXT," +
-                
+
                 // Protection request
                 "needs_protection TEXT," +
                 "protection_types TEXT," +
                 "protection_reason TEXT," +
-                
+
                 // System fields
                 "report_date DATETIME DEFAULT CURRENT_TIMESTAMP," +
                 "status TEXT DEFAULT 'pending'," +
-                
+
                 // Foreign key
                 "FOREIGN KEY (complainant_phone) REFERENCES users(phone)" +
                 ")";
@@ -996,26 +996,26 @@ public class DatabaseHelper {
             String complainantName, String fatherName, String motherName,
             String complainantPhone, String nidBc, String location,
             String incidentDate, String incidentTime, String description, String photoPath,
-            
+
             // Extortion specific
             String extortionType, String threatTypes, String threatDetails, String evidenceFilePath,
-            
+
             // Demands
             String demandType, String moneyAmount, String demandDetails,
-            
+
             // Deadline
             String hasDeadline, String deadlineDate, String deadlineTime,
-            
+
             // Extorter info
             String extorterKnown, String extorterName, String extorterContact,
             String extorterDescription, String relationshipToVictim,
-            
+
             // Witnesses
             String hasWitnesses, String witness1Details, String witness2Details,
-            
+
             // Prior history
             String reportedBefore, String previousReportDetails, String paidBefore, String paymentDetails,
-            
+
             // Protection
             String needsProtection, String protectionTypes, String protectionReason
     ) {
@@ -1047,35 +1047,35 @@ public class DatabaseHelper {
             pstmt.setString(8, incidentTime);
             pstmt.setString(9, description);
             pstmt.setString(10, photoPath);
-            
+
             pstmt.setString(11, extortionType);
             pstmt.setString(12, threatTypes);
             pstmt.setString(13, threatDetails);
             pstmt.setString(14, evidenceFilePath);
-            
+
             pstmt.setString(15, demandType);
             pstmt.setString(16, moneyAmount);
             pstmt.setString(17, demandDetails);
-            
+
             pstmt.setString(18, hasDeadline);
             pstmt.setString(19, deadlineDate);
             pstmt.setString(20, deadlineTime);
-            
+
             pstmt.setString(21, extorterKnown);
             pstmt.setString(22, extorterName);
             pstmt.setString(23, extorterContact);
             pstmt.setString(24, extorterDescription);
             pstmt.setString(25, relationshipToVictim);
-            
+
             pstmt.setString(26, hasWitnesses);
             pstmt.setString(27, witness1Details);
             pstmt.setString(28, witness2Details);
-            
+
             pstmt.setString(29, reportedBefore);
             pstmt.setString(30, previousReportDetails);
             pstmt.setString(31, paidBefore);
             pstmt.setString(32, paymentDetails);
-            
+
             pstmt.setString(33, needsProtection);
             pstmt.setString(34, protectionTypes);
             pstmt.setString(35, protectionReason);
@@ -1144,7 +1144,7 @@ public class DatabaseHelper {
     public static void createRobberyTableIfNotExists() {
         String sql = "CREATE TABLE IF NOT EXISTS robbery_reports (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                
+
                 // Common complainant information
                 "complainant_name TEXT NOT NULL," +
                 "father_name TEXT," +
@@ -1156,35 +1156,35 @@ public class DatabaseHelper {
                 "incident_time TEXT NOT NULL," +
                 "description TEXT," +
                 "photo_path TEXT," +
-                
+
                 // Robbery specific information
                 "robbery_location TEXT NOT NULL," +
                 "armed_robbery TEXT NOT NULL," + // "Armed" or "Unarmed"
                 "weapon_type TEXT," +
                 "number_of_robbers TEXT NOT NULL," +
                 "robber_description TEXT NOT NULL," +
-                
+
                 // Incident details
                 "robber_actions TEXT," +
                 "items_stolen TEXT NOT NULL," +
                 "injuries_occurred TEXT," +
                 "vehicle_used TEXT," +
-                
+
                 // Witness and evidence
                 "witnesses_available TEXT," +
                 "suspicious_activities TEXT," +
                 "reported_elsewhere TEXT," +
                 "cctv_available TEXT," +
                 "video_file_path TEXT," +
-                
+
                 // Additional information
                 "targeted_or_random TEXT," +
                 "threats_received TEXT," +
-                
+
                 // System fields
                 "report_date DATETIME DEFAULT CURRENT_TIMESTAMP," +
                 "status TEXT DEFAULT 'pending'," +
-                
+
                 // Foreign key
                 "FOREIGN KEY (complainant_phone) REFERENCES users(phone)" +
                 ")";
@@ -1205,18 +1205,18 @@ public class DatabaseHelper {
             String complainantName, String fatherName, String motherName,
             String complainantPhone, String nidBc, String location,
             String incidentDate, String incidentTime, String description, String photoPath,
-            
+
             // Robbery specific
             String robberyLocation, String armedRobbery, String weaponType,
             String numberOfRobbers, String robberDescription,
-            
+
             // Incident details
             String robberActions, String itemsStolen, String injuriesOccurred, String vehicleUsed,
-            
+
             // Witness and evidence
             String witnessesAvailable, String suspiciousActivities, String reportedElsewhere,
             String cctvAvailable, String videoFilePath,
-            
+
             // Additional info
             String targetedOrRandom, String threatsReceived
     ) {
@@ -1246,24 +1246,24 @@ public class DatabaseHelper {
             pstmt.setString(8, incidentTime);
             pstmt.setString(9, description);
             pstmt.setString(10, photoPath);
-            
+
             pstmt.setString(11, robberyLocation);
             pstmt.setString(12, armedRobbery);
             pstmt.setString(13, weaponType);
             pstmt.setString(14, numberOfRobbers);
             pstmt.setString(15, robberDescription);
-            
+
             pstmt.setString(16, robberActions);
             pstmt.setString(17, itemsStolen);
             pstmt.setString(18, injuriesOccurred);
             pstmt.setString(19, vehicleUsed);
-            
+
             pstmt.setString(20, witnessesAvailable);
             pstmt.setString(21, suspiciousActivities);
             pstmt.setString(22, reportedElsewhere);
             pstmt.setString(23, cctvAvailable);
             pstmt.setString(24, videoFilePath);
-            
+
             pstmt.setString(25, targetedOrRandom);
             pstmt.setString(26, threatsReceived);
 
@@ -1335,4 +1335,304 @@ public class DatabaseHelper {
         createRobberyTableIfNotExists(); // ADD THIS LINE
         System.out.println("Database initialized successfully!");
     }
+
+    public static ResultSet getApprovedCasesByTable(String tableName) throws SQLException {
+        String sql = "SELECT * FROM " + tableName + " WHERE status = 'approved' OR status = 'in_progress' OR status = 'solved' ORDER BY report_date DESC";
+        try {
+            Connection conn = DriverManager.getConnection(DB_URL);
+            Statement stmt = conn.createStatement();
+            return stmt.executeQuery(sql);
+        } catch (SQLException e) {
+            System.err.println("Error retrieving approved cases from " + tableName + ": " + e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * Get case statistics for dashboard
+     */
+    public static CaseStatistics getCaseStatistics() {
+        CaseStatistics stats = new CaseStatistics();
+
+        try {
+            // Count fraud cases
+            stats.fraudTotal = countCasesByStatus("fraud_reports", null);
+            stats.fraudApproved = countCasesByStatus("fraud_reports", "approved");
+            stats.fraudInProgress = countCasesByStatus("fraud_reports", "in_progress");
+            stats.fraudSolved = countCasesByStatus("fraud_reports", "solved");
+
+            // Count money laundering cases
+            stats.mlTotal = countCasesByStatus("money_laundering_reports", null);
+            stats.mlApproved = countCasesByStatus("money_laundering_reports", "approved");
+            stats.mlInProgress = countCasesByStatus("money_laundering_reports", "in_progress");
+            stats.mlSolved = countCasesByStatus("money_laundering_reports", "solved");
+
+            // Count kidnapping cases
+            stats.kidnappingTotal = countCasesByStatus("kidnapping_reports", null);
+            stats.kidnappingApproved = countCasesByStatus("kidnapping_reports", "approved");
+            stats.kidnappingInProgress = countCasesByStatus("kidnapping_reports", "in_progress");
+            stats.kidnappingSolved = countCasesByStatus("kidnapping_reports", "solved");
+
+            // Count drug offense cases
+            stats.drugTotal = countCasesByStatus("drug_offense_reports", null);
+            stats.drugApproved = countCasesByStatus("drug_offense_reports", "approved");
+            stats.drugInProgress = countCasesByStatus("drug_offense_reports", "in_progress");
+            stats.drugSolved = countCasesByStatus("drug_offense_reports", "solved");
+
+            // Count extortion cases
+            stats.extortionTotal = countCasesByStatus("extortion_reports", null);
+            stats.extortionApproved = countCasesByStatus("extortion_reports", "approved");
+            stats.extortionInProgress = countCasesByStatus("extortion_reports", "in_progress");
+            stats.extortionSolved = countCasesByStatus("extortion_reports", "solved");
+
+            // Count robbery cases
+            stats.robberyTotal = countCasesByStatus("robbery_reports", null);
+            stats.robberyApproved = countCasesByStatus("robbery_reports", "approved");
+            stats.robberyInProgress = countCasesByStatus("robbery_reports", "in_progress");
+            stats.robberySolved = countCasesByStatus("robbery_reports", "solved");
+
+        } catch (SQLException e) {
+            System.err.println("Error getting case statistics: " + e.getMessage());
+        }
+
+        return stats;
+    }
+
+    /**
+     * Helper method to count cases by status
+     */
+    private static int countCasesByStatus(String tableName, String status) throws SQLException {
+        String sql;
+        if (status == null) {
+            sql = "SELECT COUNT(*) FROM " + tableName;
+        } else {
+            sql = "SELECT COUNT(*) FROM " + tableName + " WHERE status = ?";
+        }
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            if (status != null) {
+                pstmt.setString(1, status);
+            }
+
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 0;
+        }
+    }
+
+    /**
+     * Search cases by multiple criteria
+     */
+    public static ResultSet searchCases(String tableName, String complainantName,
+                                        String fromDate, String toDate, String location) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT * FROM " + tableName + " WHERE 1=1");
+
+        if (complainantName != null && !complainantName.trim().isEmpty()) {
+            sql.append(" AND complainant_name LIKE ?");
+        }
+        if (fromDate != null && !fromDate.trim().isEmpty()) {
+            sql.append(" AND incident_date >= ?");
+        }
+        if (toDate != null && !toDate.trim().isEmpty()) {
+            sql.append(" AND incident_date <= ?");
+        }
+        if (location != null && !location.trim().isEmpty()) {
+            sql.append(" AND location LIKE ?");
+        }
+
+        sql.append(" ORDER BY report_date DESC");
+
+        Connection conn = DriverManager.getConnection(DB_URL);
+        PreparedStatement pstmt = conn.prepareStatement(sql.toString());
+
+        int paramIndex = 1;
+        if (complainantName != null && !complainantName.trim().isEmpty()) {
+            pstmt.setString(paramIndex++, "%" + complainantName + "%");
+        }
+        if (fromDate != null && !fromDate.trim().isEmpty()) {
+            pstmt.setString(paramIndex++, fromDate);
+        }
+        if (toDate != null && !toDate.trim().isEmpty()) {
+            pstmt.setString(paramIndex++, toDate);
+        }
+        if (location != null && !location.trim().isEmpty()) {
+            pstmt.setString(paramIndex++, "%" + location + "%");
+        }
+
+        return pstmt.executeQuery();
+    }
+
+    /**
+     * Create investigation notes table
+     */
+    public static void createInvestigationNotesTable() {
+        String sql = "CREATE TABLE IF NOT EXISTS investigation_notes (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "case_id INTEGER NOT NULL," +
+                "case_type TEXT NOT NULL," +
+                "investigator_name TEXT NOT NULL," +
+                "notes TEXT NOT NULL," +
+                "created_date DATETIME DEFAULT CURRENT_TIMESTAMP," +
+                "updated_date DATETIME DEFAULT CURRENT_TIMESTAMP" +
+                ")";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+            System.out.println("Investigation notes table created successfully!");
+        } catch (SQLException e) {
+            System.err.println("Error creating investigation notes table: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Save investigation notes
+     */
+    public static boolean saveInvestigationNotes(int caseId, String caseType,
+                                                 String investigatorName, String notes) {
+        String sql = "INSERT INTO investigation_notes (case_id, case_type, investigator_name, notes) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, caseId);
+            pstmt.setString(2, caseType);
+            pstmt.setString(3, investigatorName);
+            pstmt.setString(4, notes);
+
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } catch (SQLException e) {
+            System.err.println("Error saving investigation notes: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Get investigation notes for a case
+     */
+    public static ResultSet getInvestigationNotes(int caseId, String caseType) throws SQLException {
+        String sql = "SELECT * FROM investigation_notes WHERE case_id = ? AND case_type = ? ORDER BY created_date DESC";
+
+        Connection conn = DriverManager.getConnection(DB_URL);
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setInt(1, caseId);
+        pstmt.setString(2, caseType);
+
+        return pstmt.executeQuery();
+    }
+
+    /**
+     * Create evidence table
+     */
+    public static void createEvidenceTable() {
+        String sql = "CREATE TABLE IF NOT EXISTS case_evidence (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "case_id INTEGER NOT NULL," +
+                "case_type TEXT NOT NULL," +
+                "evidence_type TEXT NOT NULL," +
+                "evidence_description TEXT NOT NULL," +
+                "file_path TEXT," +
+                "collected_by TEXT NOT NULL," +
+                "collected_date DATETIME DEFAULT CURRENT_TIMESTAMP," +
+                "chain_of_custody TEXT" +
+                ")";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+            System.out.println("Evidence table created successfully!");
+        } catch (SQLException e) {
+            System.err.println("Error creating evidence table: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Add evidence to a case
+     */
+    public static boolean addEvidence(int caseId, String caseType, String evidenceType,
+                                      String description, String filePath, String collectedBy,
+                                      String chainOfCustody) {
+        String sql = "INSERT INTO case_evidence (case_id, case_type, evidence_type, evidence_description, " +
+                "file_path, collected_by, chain_of_custody) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, caseId);
+            pstmt.setString(2, caseType);
+            pstmt.setString(3, evidenceType);
+            pstmt.setString(4, description);
+            pstmt.setString(5, filePath);
+            pstmt.setString(6, collectedBy);
+            pstmt.setString(7, chainOfCustody);
+
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } catch (SQLException e) {
+            System.err.println("Error adding evidence: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Get evidence for a case
+     */
+    public static ResultSet getCaseEvidence(int caseId, String caseType) throws SQLException {
+        String sql = "SELECT * FROM case_evidence WHERE case_id = ? AND case_type = ? ORDER BY collected_date DESC";
+
+        Connection conn = DriverManager.getConnection(DB_URL);
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setInt(1, caseId);
+        pstmt.setString(2, caseType);
+
+        return pstmt.executeQuery();
+    }
+
+    /**
+     * Update initializeDatabase method to include new tables
+     */
+    public static void initializeDatabaseWithInvestigationTables() {
+        // Initialize existing tables
+        initializeDatabase();
+
+        // Initialize investigation-specific tables
+        createInvestigationNotesTable();
+        createEvidenceTable();
+
+        System.out.println("Investigation database initialized successfully!");
+    }
+
+    /**
+     * Case Statistics helper class
+     */
+    public static class CaseStatistics {
+        public int fraudTotal, fraudApproved, fraudInProgress, fraudSolved;
+        public int mlTotal, mlApproved, mlInProgress, mlSolved;
+        public int kidnappingTotal, kidnappingApproved, kidnappingInProgress, kidnappingSolved;
+        public int drugTotal, drugApproved, drugInProgress, drugSolved;
+        public int extortionTotal, extortionApproved, extortionInProgress, extortionSolved;
+        public int robberyTotal, robberyApproved, robberyInProgress, robberySolved;
+
+        public int getTotalCases() {
+            return fraudTotal + mlTotal + kidnappingTotal + drugTotal + extortionTotal + robberyTotal;
+        }
+
+        public int getTotalApproved() {
+            return fraudApproved + mlApproved + kidnappingApproved + drugApproved + extortionApproved + robberyApproved;
+        }
+
+        public int getTotalInProgress() {
+            return fraudInProgress + mlInProgress + kidnappingInProgress + drugInProgress + extortionInProgress + robberyInProgress;
+        }
+
+        public int getTotalSolved() {
+            return fraudSolved + mlSolved + kidnappingSolved + drugSolved + extortionSolved + robberySolved;
+        }
+    }
+
 }
