@@ -1,4 +1,4 @@
-package src.main;
+package org.example.java;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -8,14 +8,15 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.util.Callback;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -25,1045 +26,955 @@ import java.util.Optional;
 
 public class InvestigatorDashboard extends Application {
 
-    private TableView<CaseItem> caseTable;
-    private ObservableList<CaseItem> caseData;
-    private TextArea caseDetailsArea;
-    private TextArea investigationNotesArea;
-    private ComboBox<String> statusComboBox;
-    private ComboBox<String> priorityComboBox;
+    private TableView<Case> caseTable;
+    private ObservableList<Case> caseList;
     private ComboBox<String> caseTypeFilter;
-    private VBox totalCasesLabel;
-    private VBox pendingCasesLabel;
-    private VBox inProgressCasesLabel;
-    private VBox solvedCasesLabel;
+    private TextField searchField;
+    private Label totalCasesLabel;
+    private Label inProgressLabel;
+    private Label solvedLabel;
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("Police Investigator Dashboard - Case Management System");
+        primaryStage.setTitle("Police Investigation Dashboard");
+        primaryStage.setMaximized(true);
 
-        // Initialize data
-        caseData = FXCollections.observableArrayList();
+        // Initialize database
+        DatabaseHelper.initializeDatabaseWithInvestigationTables();
 
         // Create main layout
-        BorderPane mainLayout = new BorderPane();
-        mainLayout.setPadding(new Insets(10));
+        BorderPane root = createMainLayout();
 
-        // Header
-        VBox header = createHeader();
-        mainLayout.setTop(header);
-
-        // Center content
-        HBox centerContent = new HBox(10);
-        centerContent.setPadding(new Insets(10, 0, 0, 0));
-
-        // Left panel - Case list and filters
-        VBox leftPanel = createLeftPanel();
-        leftPanel.setPrefWidth(800);
-
-        // Right panel - Case details and investigation tools
-        VBox rightPanel = createRightPanel();
-        rightPanel.setPrefWidth(600);
-
-        centerContent.getChildren().addAll(leftPanel, rightPanel);
-        mainLayout.setCenter(centerContent);
-
-        // Wrap main layout in ScrollPane
-        ScrollPane scrollPane = new ScrollPane(mainLayout);
-        scrollPane.setFitToWidth(true); // Ensures content fits window width
-        scrollPane.setFitToHeight(true); // Ensures content fits window height
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED); // Show horizontal scrollbar when needed
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED); // Show vertical scrollbar when needed
-
-        // Load initial data
-        loadAllCases();
+        // Load cases
+        loadApprovedCases();
         updateStatistics();
 
-        Scene scene = new Scene(scrollPane, 1400, 800);
+        Scene scene = new Scene(root, 1400, 800);
+//        scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
 
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
-    private VBox createHeader() {
-        VBox header = new VBox(10);
-        header.setPadding(new Insets(0, 0, 20, 0));
+    private BorderPane createMainLayout() {
+        BorderPane root = new BorderPane();
 
-        // Title
-        Label titleLabel = new Label("🔍 Police Investigator Dashboard");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
-        titleLabel.setTextFill(Color.DARKBLUE);
+        // Top: Header and Controls
+        VBox topSection = createTopSection();
+        root.setTop(topSection);
 
-        // Statistics panel
-        HBox statsPanel = createStatisticsPanel();
+        // Center: Cases Table
+        VBox centerSection = createCenterSection();
+        root.setCenter(centerSection);
 
-        // Quick actions
-        HBox quickActions = createQuickActionsPanel();
+        // Right: Statistics Panel
+        VBox rightSection = createStatisticsPanel();
+        root.setRight(rightSection);
 
-        header.getChildren().addAll(titleLabel, statsPanel, quickActions);
-        return header;
+        return root;
     }
 
-    private HBox createStatisticsPanel() {
-        HBox statsPanel = new HBox(20);
-        statsPanel.setAlignment(Pos.CENTER);
-        statsPanel.setPadding(new Insets(10));
-        statsPanel.setStyle("-fx-background-color: #f0f8ff; -fx-border-color: #4682b4; -fx-border-radius: 5;");
+    private VBox createTopSection() {
+        VBox topSection = new VBox(15);
+        topSection.setPadding(new Insets(20));
+        topSection.setStyle("-fx-background-color: #2c3e50;");
 
-        totalCasesLabel = createStatLabel("Total Cases", "0", "#2E8B57");
-        pendingCasesLabel = createStatLabel("Pending", "0", "#FF6347");
-        inProgressCasesLabel = createStatLabel("In Progress", "0", "#4169E1");
-        solvedCasesLabel = createStatLabel("Solved", "0", "#32CD32");
+        // Header
+        Label headerLabel = new Label("🔍 POLICE INVESTIGATION DASHBOARD");
+        headerLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;");
 
-        statsPanel.getChildren().addAll(totalCasesLabel, pendingCasesLabel, inProgressCasesLabel, solvedCasesLabel);
-        return statsPanel;
-    }
+        // Controls row
+        HBox controlsRow = new HBox(15);
+        controlsRow.setAlignment(Pos.CENTER_LEFT);
 
-    private VBox createStatLabel(String title, String value, String color) {
-        VBox statBox = new VBox(5);
-        statBox.setAlignment(Pos.CENTER);
-
-        Label titleLabel = new Label(title);
-        titleLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 12));
-
-        Label valueLabel = new Label(value);
-        valueLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
-        valueLabel.setStyle("-fx-text-fill: " + color);
-
-        statBox.getChildren().addAll(valueLabel, titleLabel);
-        return statBox;
-    }
-
-    private HBox createQuickActionsPanel() {
-        HBox quickActions = new HBox(10);
-        quickActions.setAlignment(Pos.CENTER);
-
-        Button refreshBtn = new Button("🔄 Refresh");
-        Button exportBtn = new Button("📊 Export Report");
-        Button searchBtn = new Button("🔍 Advanced Search");
-        Button priorityBtn = new Button("⚠️ High Priority Cases");
-
-        refreshBtn.setOnAction(e -> {
-            loadAllCases();
-            updateStatistics();
-            showAlert("Data refreshed successfully!", Alert.AlertType.INFORMATION);
-        });
-
-        exportBtn.setOnAction(e -> exportCaseReport());
-        searchBtn.setOnAction(e -> showAdvancedSearch());
-        priorityBtn.setOnAction(e -> filterHighPriorityCases());
-
-        quickActions.getChildren().addAll(refreshBtn, exportBtn, searchBtn, priorityBtn);
-        return quickActions;
-    }
-
-    private VBox createLeftPanel() {
-        VBox leftPanel = new VBox(10);
-
-        // Filters section
-        VBox filtersSection = new VBox(10);
-        filtersSection.setPadding(new Insets(10));
-        filtersSection.setStyle("-fx-background-color: #f9f9f9; -fx-border-color: #cccccc; -fx-border-radius: 5;");
-
-        Label filtersLabel = new Label("📋 Case Filters");
-        filtersLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-
-        HBox filterControls = new HBox(10);
-        filterControls.setAlignment(Pos.CENTER_LEFT);
+        // Case type filter
+        Label filterLabel = new Label("Filter by Type:");
+        filterLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
 
         caseTypeFilter = new ComboBox<>();
-        caseTypeFilter.getItems().addAll("All Cases", "Fraud", "Money Laundering", "Kidnapping",
-                "Drug Offense", "Extortion", "Robbery");
+        caseTypeFilter.getItems().addAll("All Cases", "Fraud", "Money Laundering",
+                "Kidnapping", "Drug Offense", "Extortion", "Robbery");
         caseTypeFilter.setValue("All Cases");
         caseTypeFilter.setOnAction(e -> filterCases());
 
-        ComboBox<String> statusFilter = new ComboBox<>();
-        statusFilter.getItems().addAll("All Status", "approved", "in_progress", "solved", "closed");
-        statusFilter.setValue("All Status");
-        statusFilter.setOnAction(e -> filterCases());
+        // Search field
+        Label searchLabel = new Label("Search:");
+        searchLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
 
-        filterControls.getChildren().addAll(
-                new Label("Type:"), caseTypeFilter,
-                new Label("Status:"), statusFilter
-        );
+        searchField = new TextField();
+        searchField.setPromptText("Search by complainant name, location...");
+        searchField.setPrefWidth(250);
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> filterCases());
 
-        filtersSection.getChildren().addAll(filtersLabel, filterControls);
+        // Refresh button
+        Button refreshBtn = new Button("🔄 Refresh");
+        refreshBtn.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold;");
+        refreshBtn.setOnAction(e -> {
+            loadApprovedCases();
+            updateStatistics();
+        });
 
-        // Case table
-        VBox tableSection = createCaseTable();
+        controlsRow.getChildren().addAll(filterLabel, caseTypeFilter, searchLabel, searchField, refreshBtn);
 
-        leftPanel.getChildren().addAll(filtersSection, tableSection);
-        return leftPanel;
+        topSection.getChildren().addAll(headerLabel, controlsRow);
+        return topSection;
     }
 
-    private VBox createCaseTable() {
-        VBox tableSection = new VBox(10);
+    private VBox createCenterSection() {
+        VBox centerSection = new VBox(10);
+        centerSection.setPadding(new Insets(20));
 
-        Label tableLabel = new Label("📁 Case List");
-        tableLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        Label tableTitle = new Label("📋 Active Investigation Cases");
+        tableTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
+        // Create table
+        createCaseTable();
+
+        centerSection.getChildren().addAll(tableTitle, caseTable);
+        VBox.setVgrow(caseTable, Priority.ALWAYS);
+        return centerSection;
+    }
+
+    private void createCaseTable() {
         caseTable = new TableView<>();
-        caseTable.setPrefHeight(500);
+        caseList = FXCollections.observableArrayList();
+        caseTable.setItems(caseList);
 
-        // Create columns
-        TableColumn<CaseItem, Integer> idCol = new TableColumn<>("ID");
-        idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
-        idCol.setPrefWidth(50);
+        // Case ID Column
+        TableColumn<Case, Integer> idCol = new TableColumn<>("Case ID");
+        idCol.setCellValueFactory(new PropertyValueFactory<>("caseId"));
+        idCol.setPrefWidth(80);
 
-        TableColumn<CaseItem, String> typeCol = new TableColumn<>("Type");
-        typeCol.setCellValueFactory(new PropertyValueFactory<>("type"));
+        // Case Type Column
+        TableColumn<Case, String> typeCol = new TableColumn<>("Type");
+        typeCol.setCellValueFactory(new PropertyValueFactory<>("caseType"));
         typeCol.setPrefWidth(120);
 
-        TableColumn<CaseItem, String> complainantCol = new TableColumn<>("Complainant");
+        // Complainant Column
+        TableColumn<Case, String> complainantCol = new TableColumn<>("Complainant");
         complainantCol.setCellValueFactory(new PropertyValueFactory<>("complainantName"));
         complainantCol.setPrefWidth(150);
 
-        TableColumn<CaseItem, String> dateCol = new TableColumn<>("Date");
-        dateCol.setCellValueFactory(new PropertyValueFactory<>("incidentDate"));
-        dateCol.setPrefWidth(100);
-
-        TableColumn<CaseItem, String> locationCol = new TableColumn<>("Location");
+        // Location Column
+        TableColumn<Case, String> locationCol = new TableColumn<>("Location");
         locationCol.setCellValueFactory(new PropertyValueFactory<>("location"));
         locationCol.setPrefWidth(150);
 
-        TableColumn<CaseItem, String> statusCol = new TableColumn<>("Status");
+        // Date Column
+        TableColumn<Case, String> dateCol = new TableColumn<>("Incident Date");
+        dateCol.setCellValueFactory(new PropertyValueFactory<>("incidentDate"));
+        dateCol.setPrefWidth(120);
+
+        // Status Column
+        TableColumn<Case, String> statusCol = new TableColumn<>("Status");
         statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
         statusCol.setPrefWidth(100);
 
-        TableColumn<CaseItem, String> priorityCol = new TableColumn<>("Priority");
+        // Priority Column
+        TableColumn<Case, String> priorityCol = new TableColumn<>("Priority");
         priorityCol.setCellValueFactory(new PropertyValueFactory<>("priority"));
-        priorityCol.setPrefWidth(80);
+        priorityCol.setPrefWidth(100);
 
-        caseTable.getColumns().addAll(idCol, typeCol, complainantCol, dateCol, locationCol, statusCol, priorityCol);
-        caseTable.setItems(caseData);
+        // Actions Column
+        TableColumn<Case, Void> actionsCol = new TableColumn<>("Actions");
+        actionsCol.setPrefWidth(200);
 
-        // Handle row selection
-        caseTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                displayCaseDetails(newSelection);
+        Callback<TableColumn<Case, Void>, TableCell<Case, Void>> cellFactory = new Callback<TableColumn<Case, Void>, TableCell<Case, Void>>() {
+            @Override
+            public TableCell<Case, Void> call(final TableColumn<Case, Void> param) {
+                final TableCell<Case, Void> cell = new TableCell<Case, Void>() {
+                    private final Button viewBtn = new Button("👁️ View");
+                    private final Button notesBtn = new Button("📝 Notes");
+                    private final Button evidenceBtn = new Button("🔍 Evidence");
+
+                    {
+                        viewBtn.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 10px;");
+                        notesBtn.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-size: 10px;");
+                        evidenceBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 10px;");
+
+                        viewBtn.setOnAction(event -> {
+                            Case selectedCase = getTableView().getItems().get(getIndex());
+                            showCaseDetails(selectedCase);
+                        });
+
+                        notesBtn.setOnAction(event -> {
+                            Case selectedCase = getTableView().getItems().get(getIndex());
+                            showInvestigationNotes(selectedCase);
+                        });
+
+                        evidenceBtn.setOnAction(event -> {
+                            Case selectedCase = getTableView().getItems().get(getIndex());
+                            showEvidenceManagement(selectedCase);
+                        });
+                    }
+
+                    @Override
+                    public void updateItem(Void item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setGraphic(null);
+                        } else {
+                            HBox buttons = new HBox(5);
+                            buttons.setAlignment(Pos.CENTER);
+                            buttons.getChildren().addAll(viewBtn, notesBtn, evidenceBtn);
+                            setGraphic(buttons);
+                        }
+                    }
+                };
+                return cell;
             }
+        };
+
+        actionsCol.setCellFactory(cellFactory);
+
+        caseTable.getColumns().addAll(idCol, typeCol, complainantCol, locationCol, dateCol, statusCol, priorityCol, actionsCol);
+        caseTable.setRowFactory(tv -> {
+            TableRow<Case> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    showCaseDetails(row.getItem());
+                }
+            });
+            return row;
         });
-
-        tableSection.getChildren().addAll(tableLabel, caseTable);
-        return tableSection;
     }
 
-    private VBox createRightPanel() {
-        VBox rightPanel = new VBox(10);
+    private VBox createStatisticsPanel() {
+        VBox statsPanel = new VBox(15);
+        statsPanel.setPadding(new Insets(20));
+        statsPanel.setPrefWidth(300);
+        statsPanel.setStyle("-fx-background-color: #ecf0f1; -fx-border-color: #bdc3c7;");
 
-        // Case details section
-        VBox detailsSection = createCaseDetailsSection();
+        Label statsTitle = new Label("📊 Case Statistics");
+        statsTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
-        // Investigation tools section
-        VBox toolsSection = createInvestigationToolsSection();
+        // Statistics cards
+        totalCasesLabel = createStatCard("Total Cases", "0", "#3498db");
+        inProgressLabel = createStatCard("In Progress", "0", "#f39c12");
+        solvedLabel = createStatCard("Solved", "0", "#27ae60");
 
-        rightPanel.getChildren().addAll(detailsSection, toolsSection);
-        return rightPanel;
-    }
+        // Case type breakdown
+        Label breakdownTitle = new Label("Case Type Breakdown:");
+        breakdownTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
 
-    private VBox createCaseDetailsSection() {
-        VBox detailsSection = new VBox(10);
-        detailsSection.setPadding(new Insets(10));
-        detailsSection.setStyle("-fx-background-color: #f0f8ff; -fx-border-color: #4682b4; -fx-border-radius: 5;");
-
-        Label detailsLabel = new Label("📄 Case Details");
-        detailsLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-
-        caseDetailsArea = new TextArea();
-        caseDetailsArea.setPrefRowCount(8);
-        caseDetailsArea.setEditable(false);
-        caseDetailsArea.setWrapText(true);
-        caseDetailsArea.setPromptText("Select a case to view details...");
-
-        // Case management controls
-        HBox caseControls = new HBox(10);
-        caseControls.setAlignment(Pos.CENTER_LEFT);
-
-        statusComboBox = new ComboBox<>();
-        statusComboBox.getItems().addAll("approved", "in_progress", "solved", "closed", "rejected");
-        statusComboBox.setPromptText("Update Status");
-
-        priorityComboBox = new ComboBox<>();
-        priorityComboBox.getItems().addAll("Low", "Medium", "High", "Critical");
-        priorityComboBox.setPromptText("Set Priority");
-
-        Button updateBtn = new Button("💾 Update Case");
-        updateBtn.setOnAction(e -> updateCaseStatus());
-
-        caseControls.getChildren().addAll(
-                new Label("Status:"), statusComboBox,
-                new Label("Priority:"), priorityComboBox,
-                updateBtn
+        VBox typeBreakdown = new VBox(5);
+        typeBreakdown.getChildren().addAll(
+                createTypeStatLabel("Fraud", 0),
+                createTypeStatLabel("Money Laundering", 0),
+                createTypeStatLabel("Kidnapping", 0),
+                createTypeStatLabel("Drug Offense", 0),
+                createTypeStatLabel("Extortion", 0),
+                createTypeStatLabel("Robbery", 0)
         );
 
-        detailsSection.getChildren().addAll(detailsLabel, caseDetailsArea, caseControls);
-        return detailsSection;
+        statsPanel.getChildren().addAll(statsTitle, totalCasesLabel, inProgressLabel,
+                solvedLabel, new Separator(), breakdownTitle, typeBreakdown);
+        return statsPanel;
     }
 
-    private VBox createInvestigationToolsSection() {
-        VBox toolsSection = new VBox(10);
-        toolsSection.setPadding(new Insets(10));
-        toolsSection.setStyle("-fx-background-color: #fff8dc; -fx-border-color: #daa520; -fx-border-radius: 5;");
-
-        Label toolsLabel = new Label("🔧 Investigation Tools");
-        toolsLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-
-        // Investigation notes
-        Label notesLabel = new Label("📝 Investigation Notes:");
-        investigationNotesArea = new TextArea();
-        investigationNotesArea.setPrefRowCount(6);
-        investigationNotesArea.setWrapText(true);
-        investigationNotesArea.setPromptText("Add your investigation notes here...");
-
-        Button saveNotesBtn = new Button("💾 Save Notes");
-        saveNotesBtn.setOnAction(e -> saveInvestigationNotes());
-
-        // Action buttons
-        HBox actionButtons = new HBox(10);
-        actionButtons.setAlignment(Pos.CENTER_LEFT);
-
-        Button evidenceBtn = new Button("📎 Manage Evidence");
-        Button contactBtn = new Button("📞 Contact Complainant");
-        Button timelineBtn = new Button("⏰ Case Timeline");
-        Button reportBtn = new Button("📋 Generate Report");
-
-        evidenceBtn.setOnAction(e -> manageEvidence());
-        contactBtn.setOnAction(e -> contactComplainant());
-        timelineBtn.setOnAction(e -> showCaseTimeline());
-        reportBtn.setOnAction(e -> generateInvestigationReport());
-
-        actionButtons.getChildren().addAll(evidenceBtn, contactBtn, timelineBtn, reportBtn);
-
-        toolsSection.getChildren().addAll(toolsLabel, notesLabel, investigationNotesArea,
-                saveNotesBtn, new Separator(), actionButtons);
-        return toolsSection;
+    private Label createStatCard(String title, String value, String color) {
+        Label card = new Label(title + "\n" + value);
+        card.setStyle(String.format("-fx-background-color: %s; -fx-text-fill: white; " +
+                "-fx-font-weight: bold; -fx-padding: 15; -fx-background-radius: 5; " +
+                "-fx-font-size: 14px; -fx-alignment: center;", color));
+        card.setPrefWidth(250);
+        return card;
     }
 
-    private void loadAllCases() {
-        caseData.clear();
-
-        // Load Fraud cases
-        loadCasesByType("fraud_reports", "Fraud");
-
-        // Load Money Laundering cases
-        loadCasesByType("money_laundering_reports", "Money Laundering");
-
-        // Load Kidnapping cases
-        loadCasesByType("kidnapping_reports", "Kidnapping");
-
-        // Load Drug Offense cases
-        loadCasesByType("drug_offense_reports", "Drug Offense");
-
-        // Load Extortion cases
-        loadCasesByType("extortion_reports", "Extortion");
-
-        // Load Robbery cases
-        loadCasesByType("robbery_reports", "Robbery");
+    private Label createTypeStatLabel(String type, int count) {
+        Label label = new Label(String.format("• %s: %d", type, count));
+        label.setStyle("-fx-font-size: 12px;");
+        return label;
     }
 
-    private void loadCasesByType(String tableName, String caseType) {
-        try {
-            ResultSet rs = DatabaseHelper.getApprovedCasesByTable(tableName);
-            while (rs != null && rs.next()) {
-                CaseItem caseItem = new CaseItem(
-                        rs.getInt("id"),
-                        caseType,
-                        rs.getString("complainant_name"),
-                        rs.getString("incident_date"),
-                        rs.getString("location"),
-                        rs.getString("status") != null ? rs.getString("status") : "approved",
-                        determinePriority(caseType, rs),
-                        rs
-                );
-                caseData.add(caseItem);
+    private void loadApprovedCases() {
+        caseList.clear();
+
+        String[] tables = {"fraud_reports", "money_laundering_reports", "kidnapping_reports",
+                "drug_offense_reports", "extortion_reports", "robbery_reports"};
+        String[] types = {"Fraud", "Money Laundering", "Kidnapping", "Drug Offense", "Extortion", "Robbery"};
+
+        for (int i = 0; i < tables.length; i++) {
+            try {
+                ResultSet rs = DatabaseHelper.getApprovedCasesByTable(tables[i]);
+                while (rs != null && rs.next()) {
+                    Case case_ = new Case();
+                    case_.setCaseId(rs.getInt("id"));
+                    case_.setCaseType(types[i]);
+                    case_.setComplainantName(rs.getString("complainant_name"));
+                    case_.setComplainantPhone(rs.getString("complainant_phone"));
+                    case_.setLocation(rs.getString("location"));
+                    case_.setIncidentDate(rs.getString("incident_date"));
+                    case_.setIncidentTime(rs.getString("incident_time"));
+                    case_.setStatus(rs.getString("status"));
+                    case_.setReportDate(rs.getString("report_date"));
+                    case_.setDescription(rs.getString("description"));
+
+                    // Set additional fields based on case type
+                    setCaseSpecificFields(case_, rs, types[i]);
+
+                    // Determine priority
+                    case_.setPriority(determinePriority(case_));
+
+                    caseList.add(case_);
+                }
+                if (rs != null) rs.close();
+            } catch (SQLException e) {
+                showError("Error loading cases from " + tables[i] + ": " + e.getMessage());
             }
-        } catch (SQLException e) {
-            System.err.println("Error loading " + caseType + " cases: " + e.getMessage());
         }
     }
 
-    private String determinePriority(String caseType, ResultSet rs) throws SQLException {
-        // Priority logic based on case type and specific conditions
-        switch (caseType) {
-            case "Kidnapping":
-                String urgency = rs.getString("urgency_level");
-                if (urgency != null && urgency.contains("Critical")) {
-                    return "Critical";
-                }
-                return "High";
-            case "Drug Offense":
-                String trafficking = rs.getString("trafficking_observed");
-                if ("Yes".equals(trafficking)) {
-                    return "High";
-                }
-                return "Medium";
+    private void setCaseSpecificFields(Case case_, ResultSet rs, String type) throws SQLException {
+        switch (type) {
+            case "Fraud":
+                case_.setAccusedName(rs.getString("accused_name"));
+                case_.setTransactionAmount(rs.getString("transaction_amount"));
+                case_.setFraudType(rs.getString("type_of_fraud"));
+                break;
             case "Money Laundering":
-                String amount = rs.getString("total_amount");
-                if (amount != null && !amount.isEmpty()) {
-                    try {
-                        double amountValue = Double.parseDouble(amount.replaceAll("[^0-9.]", ""));
-                        if (amountValue > 1000000) {
-                            return "Critical";
-                        } else if (amountValue > 100000) {
-                            return "High";
-                        }
-                    } catch (NumberFormatException e) {
-                        // Continue with default logic
-                    }
-                }
-                return "Medium";
-            default:
-                return "Medium";
+                case_.setTotalAmount(rs.getString("total_amount"));
+                case_.setFundSources(rs.getString("fund_sources"));
+                case_.setUrgencyLevel(rs.getString("urgency_level"));
+                break;
+            case "Kidnapping":
+                case_.setVictimAge(rs.getInt("victim_age"));
+                case_.setVictimGender(rs.getString("victim_gender"));
+                case_.setLastLocation(rs.getString("last_location"));
+                case_.setUrgencyLevel(rs.getString("urgency_level"));
+                break;
+            case "Drug Offense":
+                case_.setDrugType(rs.getString("drug_type"));
+                case_.setQuantity(rs.getString("quantity"));
+                case_.setLocationType(rs.getString("location_type"));
+                break;
+            case "Extortion":
+                case_.setExtortionType(rs.getString("extortion_type"));
+                case_.setThreatTypes(rs.getString("threat_types"));
+                case_.setMoneyAmount(rs.getString("money_amount"));
+                break;
+            case "Robbery":
+                case_.setArmedRobbery(rs.getString("armed_robbery"));
+                case_.setItemsStolen(rs.getString("items_stolen"));
+                case_.setNumberOfRobbers(rs.getString("number_of_robbers"));
+                break;
         }
     }
 
-    private void displayCaseDetails(CaseItem caseItem) {
-        StringBuilder details = new StringBuilder();
-        details.append("CASE ID: ").append(caseItem.getId()).append("\n");
-        details.append("TYPE: ").append(caseItem.getType()).append("\n");
-        details.append("COMPLAINANT: ").append(caseItem.getComplainantName()).append("\n");
-        details.append("DATE: ").append(caseItem.getIncidentDate()).append("\n");
-        details.append("LOCATION: ").append(caseItem.getLocation()).append("\n");
-        details.append("STATUS: ").append(caseItem.getStatus()).append("\n");
-        details.append("PRIORITY: ").append(caseItem.getPriority()).append("\n\n");
-
-        try {
-            ResultSet rs = caseItem.getResultSet();
-            details.append("DETAILED INFORMATION:\n");
-            details.append("========================\n");
-
-            // Add specific details based on case type
-            switch (caseItem.getType()) {
-                case "Fraud":
-                    appendFraudDetails(details, rs);
-                    break;
-                case "Money Laundering":
-                    appendMoneyLaunderingDetails(details, rs);
-                    break;
-                case "Kidnapping":
-                    appendKidnappingDetails(details, rs);
-                    break;
-                case "Drug Offense":
-                    appendDrugOffenseDetails(details, rs);
-                    break;
-                case "Extortion":
-                    appendExtortionDetails(details, rs);
-                    break;
-                case "Robbery":
-                    appendRobberyDetails(details, rs);
-                    break;
-            }
-        } catch (SQLException e) {
-            details.append("Error loading detailed information: ").append(e.getMessage());
+    private String determinePriority(Case case_) {
+        if ("Kidnapping".equals(case_.getCaseType()) ||
+                (case_.getUrgencyLevel() != null && case_.getUrgencyLevel().contains("Critical"))) {
+            return "HIGH";
+        } else if ("Drug Offense".equals(case_.getCaseType()) ||
+                "Extortion".equals(case_.getCaseType())) {
+            return "MEDIUM";
         }
-
-        caseDetailsArea.setText(details.toString());
-        statusComboBox.setValue(caseItem.getStatus());
-        priorityComboBox.setValue(caseItem.getPriority());
-    }
-
-    private void appendFraudDetails(StringBuilder details, ResultSet rs) throws SQLException {
-        details.append("Description: ").append(rs.getString("description_of_incident")).append("\n");
-        details.append("Accused Name: ").append(rs.getString("accused_name")).append("\n");
-        details.append("Accused Phone: ").append(rs.getString("accused_phone")).append("\n");
-        details.append("Fraud Type: ").append(rs.getString("type_of_fraud")).append("\n");
-        details.append("Transaction Amount: ").append(rs.getString("transaction_amount")).append("\n");
-        details.append("Communication Mode: ").append(rs.getString("mode_of_communication")).append("\n");
-    }
-
-    private void appendMoneyLaunderingDetails(StringBuilder details, ResultSet rs) throws SQLException {
-        details.append("Description: ").append(rs.getString("description")).append("\n");
-        details.append("Total Amount: ").append(rs.getString("total_amount")).append("\n");
-        details.append("Currency: ").append(rs.getString("currency_type")).append("\n");
-        details.append("Fund Sources: ").append(rs.getString("fund_sources")).append("\n");
-        details.append("Bank Details: ").append(rs.getString("bank_details")).append("\n");
-    }
-
-    private void appendKidnappingDetails(StringBuilder details, ResultSet rs) throws SQLException {
-        details.append("Description: ").append(rs.getString("description")).append("\n");
-        details.append("Victim Age: ").append(rs.getInt("victim_age")).append("\n");
-        details.append("Victim Gender: ").append(rs.getString("victim_gender")).append("\n");
-        details.append("Last Location: ").append(rs.getString("last_location")).append("\n");
-        details.append("Urgency Level: ").append(rs.getString("urgency_level")).append("\n");
-        details.append("Ransom Demand: ").append(rs.getString("ransom_demand")).append("\n");
-    }
-
-    private void appendDrugOffenseDetails(StringBuilder details, ResultSet rs) throws SQLException {
-        details.append("Description: ").append(rs.getString("description")).append("\n");
-        details.append("Drug Type: ").append(rs.getString("drug_type")).append("\n");
-        details.append("Quantity: ").append(rs.getString("quantity")).append("\n");
-        details.append("Location Type: ").append(rs.getString("location_type")).append("\n");
-        details.append("Trafficking Observed: ").append(rs.getString("trafficking_observed")).append("\n");
-    }
-
-    private void appendExtortionDetails(StringBuilder details, ResultSet rs) throws SQLException {
-        details.append("Description: ").append(rs.getString("description")).append("\n");
-        details.append("Extortion Type: ").append(rs.getString("extortion_type")).append("\n");
-        details.append("Threat Details: ").append(rs.getString("threat_details")).append("\n");
-        details.append("Money Amount: ").append(rs.getString("money_amount")).append("\n");
-        details.append("Deadline: ").append(rs.getString("deadline_date")).append("\n");
-    }
-
-    private void appendRobberyDetails(StringBuilder details, ResultSet rs) throws SQLException {
-        details.append("Description: ").append(rs.getString("description")).append("\n");
-        details.append("Armed Robbery: ").append(rs.getString("armed_robbery")).append("\n");
-        details.append("Weapon Type: ").append(rs.getString("weapon_type")).append("\n");
-        details.append("Number of Robbers: ").append(rs.getString("number_of_robbers")).append("\n");
-        details.append("Items Stolen: ").append(rs.getString("items_stolen")).append("\n");
-    }
-
-    private void updateCaseStatus() {
-        CaseItem selectedCase = caseTable.getSelectionModel().getSelectedItem();
-        if (selectedCase == null) {
-            showAlert("Please select a case to update.", Alert.AlertType.WARNING);
-            return;
-        }
-
-        String newStatus = statusComboBox.getValue();
-        String newPriority = priorityComboBox.getValue();
-
-        if (newStatus == null) {
-            showAlert("Please select a status.", Alert.AlertType.WARNING);
-            return;
-        }
-
-        // Update in database based on case type
-        boolean success = updateCaseInDatabase(selectedCase, newStatus);
-
-        if (success) {
-            selectedCase.setStatus(newStatus);
-            if (newPriority != null) {
-                selectedCase.setPriority(newPriority);
-            }
-            caseTable.refresh();
-            updateStatistics();
-            showAlert("Case updated successfully!", Alert.AlertType.INFORMATION);
-        } else {
-            showAlert("Failed to update case.", Alert.AlertType.ERROR);
-        }
-    }
-
-    private boolean updateCaseInDatabase(CaseItem caseItem, String newStatus) {
-        try {
-            switch (caseItem.getType()) {
-                case "Fraud":
-                    return DatabaseHelper.updateFraudReportStatus(caseItem.getId(), newStatus);
-                case "Money Laundering":
-                    return DatabaseHelper.updateMoneyLaunderingReportStatus(caseItem.getId(), newStatus);
-                case "Kidnapping":
-                    return DatabaseHelper.updateKidnappingReportStatus(caseItem.getId(), newStatus);
-                case "Drug Offense":
-                    return DatabaseHelper.updateDrugOffenseReportStatus(caseItem.getId(), newStatus);
-                case "Extortion":
-                    return DatabaseHelper.updateExtortionReportStatus(caseItem.getId(), newStatus);
-                case "Robbery":
-                    return DatabaseHelper.updateRobberyReportStatus(caseItem.getId(), newStatus);
-                default:
-                    return false;
-            }
-        } catch (Exception e) {
-            System.err.println("Error updating case status: " + e.getMessage());
-            return false;
-        }
-    }
-
-    private void updateStatistics() {
-        int total = caseData.size();
-        int pending = (int) caseData.stream().filter(c -> "approved".equals(c.getStatus())).count();
-        int inProgress = (int) caseData.stream().filter(c -> "in_progress".equals(c.getStatus())).count();
-        int solved = (int) caseData.stream().filter(c -> "solved".equals(c.getStatus())).count();
-
-        ((Label) totalCasesLabel.getChildren().get(0)).setText(String.valueOf(total));
-        ((Label) pendingCasesLabel.getChildren().get(0)).setText(String.valueOf(pending));
-        ((Label) inProgressCasesLabel.getChildren().get(0)).setText(String.valueOf(inProgress));
-        ((Label) solvedCasesLabel.getChildren().get(0)).setText(String.valueOf(solved));
+        return "NORMAL";
     }
 
     private void filterCases() {
-        // Implementation for filtering cases based on selected criteria
-        loadAllCases(); // For now, reload all cases
-        updateStatistics();
-    }
+        ObservableList<Case> filteredList = FXCollections.observableArrayList();
 
-    private void filterHighPriorityCases() {
-        ObservableList<CaseItem> highPriorityCases = FXCollections.observableArrayList();
-        for (CaseItem caseItem : caseData) {
-            if ("High".equals(caseItem.getPriority()) || "Critical".equals(caseItem.getPriority())) {
-                highPriorityCases.add(caseItem);
+        for (Case case_ : caseList) {
+            boolean matchesType = caseTypeFilter.getValue().equals("All Cases") ||
+                    case_.getCaseType().equals(caseTypeFilter.getValue());
+
+            boolean matchesSearch = searchField.getText().isEmpty() ||
+                    case_.getComplainantName().toLowerCase().contains(searchField.getText().toLowerCase()) ||
+                    case_.getLocation().toLowerCase().contains(searchField.getText().toLowerCase()) ||
+                    String.valueOf(case_.getCaseId()).contains(searchField.getText());
+
+            if (matchesType && matchesSearch) {
+                filteredList.add(case_);
             }
         }
-        caseTable.setItems(highPriorityCases);
+
+        caseTable.setItems(filteredList);
     }
 
-    private void saveInvestigationNotes() {
-        CaseItem selectedCase = caseTable.getSelectionModel().getSelectedItem();
-        if (selectedCase == null) {
-            showAlert("Please select a case to save notes.", Alert.AlertType.WARNING);
-            return;
-        }
+    private void updateStatistics() {
+        int total = caseList.size();
+        int inProgress = (int) caseList.stream().filter(c -> "in_progress".equals(c.getStatus())).count();
+        int solved = (int) caseList.stream().filter(c -> "solved".equals(c.getStatus())).count();
 
-        String notes = investigationNotesArea.getText();
-        if (notes.trim().isEmpty()) {
-            showAlert("Please enter investigation notes.", Alert.AlertType.WARNING);
-            return;
-        }
-
-        // In a real implementation, you would save notes to database
-        // For now, just show success message
-        showAlert("Investigation notes saved successfully!", Alert.AlertType.INFORMATION);
+        totalCasesLabel.setText("Total Cases\n" + total);
+        inProgressLabel.setText("In Progress\n" + inProgress);
+        solvedLabel.setText("Solved\n" + solved);
     }
 
-    private void manageEvidence() {
-        CaseItem selectedCase = caseTable.getSelectionModel().getSelectedItem();
-        if (selectedCase == null) {
-            showAlert("Please select a case to manage evidence.", Alert.AlertType.WARNING);
-            return;
-        }
+    private void showCaseDetails(Case selectedCase) {
+        Stage detailStage = new Stage();
+        detailStage.initModality(Modality.APPLICATION_MODAL);
+        detailStage.setTitle("Case Details - ID: " + selectedCase.getCaseId());
 
-        // Show evidence management dialog
-        showEvidenceDialog(selectedCase);
-    }
-
-    private void showEvidenceDialog(CaseItem caseItem) {
-        Stage dialog = new Stage();
-        dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.setTitle("Evidence Management - Case #" + caseItem.getId());
-
-        VBox content = new VBox(10);
-        content.setPadding(new Insets(20));
-
-        Label titleLabel = new Label("📎 Evidence Management");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
-
-        TextArea evidenceArea = new TextArea();
-        evidenceArea.setPrefRowCount(10);
-        evidenceArea.setPromptText("List all evidence related to this case...");
-
-        HBox buttons = new HBox(10);
-        buttons.setAlignment(Pos.CENTER);
-
-        Button addEvidenceBtn = new Button("➕ Add Evidence");
-        Button viewEvidenceBtn = new Button("👁️ View Evidence");
-        Button closeBtn = new Button("❌ Close");
-
-        closeBtn.setOnAction(e -> dialog.close());
-
-        buttons.getChildren().addAll(addEvidenceBtn, viewEvidenceBtn, closeBtn);
-        content.getChildren().addAll(titleLabel, evidenceArea, buttons);
-
-        Scene scene = new Scene(content, 500, 400);
-        dialog.setScene(scene);
-        dialog.show();
-    }
-
-    private void contactComplainant() {
-        CaseItem selectedCase = caseTable.getSelectionModel().getSelectedItem();
-        if (selectedCase == null) {
-            showAlert("Please select a case to contact complainant.", Alert.AlertType.WARNING);
-            return;
-        }
-
-        try {
-            String phone = selectedCase.getResultSet().getString("complainant_phone");
-            showAlert("Complainant Phone: " + phone + "\n\nUse this number to contact the complainant.",
-                    Alert.AlertType.INFORMATION);
-        } catch (SQLException e) {
-            showAlert("Error retrieving complainant contact information.", Alert.AlertType.ERROR);
-        }
-    }
-
-    private void showCaseTimeline() {
-        CaseItem selectedCase = caseTable.getSelectionModel().getSelectedItem();
-        if (selectedCase == null) {
-            showAlert("Please select a case to view timeline.", Alert.AlertType.WARNING);
-            return;
-        }
-
-        // Show timeline dialog
-        Stage dialog = new Stage();
-        dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.setTitle("Case Timeline - Case #" + selectedCase.getId());
-
-        VBox content = new VBox(10);
-        content.setPadding(new Insets(20));
-
-        Label titleLabel = new Label("⏰ Case Timeline");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
-
-        TextArea timelineArea = new TextArea();
-        timelineArea.setPrefRowCount(15);
-        timelineArea.setEditable(false);
-
-        StringBuilder timeline = new StringBuilder();
-        timeline.append("CASE TIMELINE - Case #").append(selectedCase.getId()).append("\n");
-        timeline.append("=====================================\n\n");
-        timeline.append("📅 Case Reported: ").append(selectedCase.getIncidentDate()).append("\n");
-        timeline.append("📍 Location: ").append(selectedCase.getLocation()).append("\n");
-        timeline.append("👤 Complainant: ").append(selectedCase.getComplainantName()).append("\n");
-        timeline.append("📊 Current Status: ").append(selectedCase.getStatus()).append("\n");
-        timeline.append("⚠️ Priority Level: ").append(selectedCase.getPriority()).append("\n\n");
-        timeline.append("INVESTIGATION MILESTONES:\n");
-        timeline.append("-------------------------\n");
-        timeline.append("• Case approved for investigation\n");
-        timeline.append("• Initial evidence collection\n");
-        timeline.append("• Witness interviews scheduled\n");
-        timeline.append("• Forensic analysis requested\n");
-        timeline.append("• Follow-up investigation pending\n\n");
-        timeline.append("NEXT ACTIONS:\n");
-        timeline.append("-------------\n");
-        timeline.append("• Contact complainant for additional details\n");
-        timeline.append("• Review available evidence\n");
-        timeline.append("• Coordinate with forensic team\n");
-        timeline.append("• Schedule suspect interview\n");
-
-        timelineArea.setText(timeline.toString());
-
-        Button closeBtn = new Button("❌ Close");
-        closeBtn.setOnAction(e -> dialog.close());
-
-        content.getChildren().addAll(titleLabel, timelineArea, closeBtn);
-
-        Scene scene = new Scene(content, 600, 500);
-        dialog.setScene(scene);
-        dialog.show();
-    }
-
-    private void generateInvestigationReport() {
-        CaseItem selectedCase = caseTable.getSelectionModel().getSelectedItem();
-        if (selectedCase == null) {
-            showAlert("Please select a case to generate report.", Alert.AlertType.WARNING);
-            return;
-        }
-
-        // Show report generation dialog
-        Stage dialog = new Stage();
-        dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.setTitle("Investigation Report - Case #" + selectedCase.getId());
-
-        VBox content = new VBox(10);
-        content.setPadding(new Insets(20));
-
-        Label titleLabel = new Label("📋 Investigation Report");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
-
-        TextArea reportArea = new TextArea();
-        reportArea.setPrefRowCount(20);
-
-        StringBuilder report = new StringBuilder();
-        report.append("POLICE INVESTIGATION REPORT\n");
-        report.append("===========================\n\n");
-        report.append("Case ID: ").append(selectedCase.getId()).append("\n");
-        report.append("Case Type: ").append(selectedCase.getType()).append("\n");
-        report.append("Investigating Officer: [Your Name]\n");
-        report.append("Report Date: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))).append("\n\n");
-
-        report.append("CASE SUMMARY:\n");
-        report.append("-------------\n");
-        report.append("Complainant: ").append(selectedCase.getComplainantName()).append("\n");
-        report.append("Incident Date: ").append(selectedCase.getIncidentDate()).append("\n");
-        report.append("Location: ").append(selectedCase.getLocation()).append("\n");
-        report.append("Current Status: ").append(selectedCase.getStatus()).append("\n");
-        report.append("Priority Level: ").append(selectedCase.getPriority()).append("\n\n");
-
-        report.append("INVESTIGATION FINDINGS:\n");
-        report.append("-----------------------\n");
-        report.append("• Initial complaint received and verified\n");
-        report.append("• Evidence collection in progress\n");
-        report.append("• Witness statements pending\n");
-        report.append("• Forensic analysis requested\n\n");
-
-        report.append("EVIDENCE COLLECTED:\n");
-        report.append("-------------------\n");
-        report.append("• Complainant statement\n");
-        report.append("• Supporting documents\n");
-        report.append("• Digital evidence (if applicable)\n");
-        report.append("• Physical evidence (if applicable)\n\n");
-
-        report.append("RECOMMENDATIONS:\n");
-        report.append("----------------\n");
-        report.append("• Continue investigation\n");
-        report.append("• Interview additional witnesses\n");
-        report.append("• Coordinate with other departments\n");
-        report.append("• Regular case review\n\n");
-
-        report.append("CONCLUSION:\n");
-        report.append("-----------\n");
-        report.append("Investigation ongoing. Case requires continued attention.\n");
-        report.append("Regular updates will be provided.\n\n");
-
-        report.append("Investigating Officer: ___________________\n");
-        report.append("Signature: ___________________\n");
-        report.append("Date: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))).append("\n");
-
-        reportArea.setText(report.toString());
-
-        HBox buttons = new HBox(10);
-        buttons.setAlignment(Pos.CENTER);
-
-        Button saveBtn = new Button("💾 Save Report");
-        Button printBtn = new Button("🖨️ Print Report");
-        Button closeBtn = new Button("❌ Close");
-
-        saveBtn.setOnAction(e -> {
-            showAlert("Report saved successfully!", Alert.AlertType.INFORMATION);
-            dialog.close();
-        });
-
-        printBtn.setOnAction(e -> {
-            showAlert("Report sent to printer!", Alert.AlertType.INFORMATION);
-        });
-
-        closeBtn.setOnAction(e -> dialog.close());
-
-        buttons.getChildren().addAll(saveBtn, printBtn, closeBtn);
-        content.getChildren().addAll(titleLabel, reportArea, buttons);
-
-        Scene scene = new Scene(content, 700, 600);
-        dialog.setScene(scene);
-        dialog.show();
-    }
-
-    private void exportCaseReport() {
-        Stage dialog = new Stage();
-        dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.setTitle("Export Case Reports");
-
+        ScrollPane scrollPane = new ScrollPane();
         VBox content = new VBox(15);
         content.setPadding(new Insets(20));
-        content.setAlignment(Pos.CENTER);
 
-        Label titleLabel = new Label("📊 Export Case Reports");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        // Case header
+        Label headerLabel = new Label("📋 Case Details");
+        headerLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
 
-        VBox options = new VBox(10);
-
-        CheckBox allCasesCheck = new CheckBox("All Cases");
-        CheckBox pendingCheck = new CheckBox("Pending Cases Only");
-        CheckBox inProgressCheck = new CheckBox("In Progress Cases Only");
-        CheckBox solvedCheck = new CheckBox("Solved Cases Only");
-
-        allCasesCheck.setSelected(true);
-
-        ComboBox<String> formatCombo = new ComboBox<>();
-        formatCombo.getItems().addAll("PDF Report", "Excel Spreadsheet", "CSV File");
-        formatCombo.setValue("PDF Report");
-
-        options.getChildren().addAll(
-                new Label("Select Cases to Export:"),
-                allCasesCheck, pendingCheck, inProgressCheck, solvedCheck,
-                new Label("Export Format:"),
-                formatCombo
+        // Basic information
+        VBox basicInfo = createInfoSection("Basic Information",
+                "Case ID: " + selectedCase.getCaseId(),
+                "Case Type: " + selectedCase.getCaseType(),
+                "Status: " + selectedCase.getStatus(),
+                "Priority: " + selectedCase.getPriority(),
+                "Report Date: " + selectedCase.getReportDate()
         );
 
-        HBox buttons = new HBox(10);
-        buttons.setAlignment(Pos.CENTER);
+        // Complainant information
+        VBox complainantInfo = createInfoSection("Complainant Information",
+                "Name: " + selectedCase.getComplainantName(),
+                "Phone: " + selectedCase.getComplainantPhone(),
+                "Location: " + selectedCase.getLocation()
+        );
 
-        Button exportBtn = new Button("📤 Export");
-        Button cancelBtn = new Button("❌ Cancel");
+        // Incident details
+        VBox incidentInfo = createInfoSection("Incident Details",
+                "Date: " + selectedCase.getIncidentDate(),
+                "Time: " + selectedCase.getIncidentTime(),
+                "Description: " + (selectedCase.getDescription() != null ? selectedCase.getDescription() : "Not provided")
+        );
 
-        exportBtn.setOnAction(e -> {
-            showAlert("Export completed successfully!\nFile saved to: Documents/CaseReports/",
-                    Alert.AlertType.INFORMATION);
-            dialog.close();
+        // Case-specific information
+        VBox specificInfo = createCaseSpecificInfo(selectedCase);
+
+        // Action buttons
+        HBox actionButtons = new HBox(10);
+        actionButtons.setAlignment(Pos.CENTER);
+
+        Button updateStatusBtn = new Button("Update Status");
+        updateStatusBtn.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
+        updateStatusBtn.setOnAction(e -> {
+            updateCaseStatus(selectedCase);
+            detailStage.close();
         });
 
-        cancelBtn.setOnAction(e -> dialog.close());
+        Button closeBtn = new Button("Close");
+        closeBtn.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: white;");
+        closeBtn.setOnAction(e -> detailStage.close());
 
-        buttons.getChildren().addAll(exportBtn, cancelBtn);
-        content.getChildren().addAll(titleLabel, options, buttons);
+        actionButtons.getChildren().addAll(updateStatusBtn, closeBtn);
 
-        Scene scene = new Scene(content, 400, 350);
-        dialog.setScene(scene);
-        dialog.show();
+        content.getChildren().addAll(headerLabel, basicInfo, complainantInfo, incidentInfo, specificInfo, actionButtons);
+        scrollPane.setContent(content);
+        scrollPane.setFitToWidth(true);
+
+        Scene scene = new Scene(scrollPane, 600, 700);
+        detailStage.setScene(scene);
+        detailStage.show();
     }
 
-    private void showAdvancedSearch() {
-        Stage dialog = new Stage();
-        dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.setTitle("Advanced Case Search");
+    private VBox createInfoSection(String title, String... info) {
+        VBox section = new VBox(5);
+
+        Label titleLabel = new Label(title);
+        titleLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        VBox infoBox = new VBox(3);
+        infoBox.setStyle("-fx-background-color: #f8f9fa; -fx-padding: 10; -fx-border-color: #dee2e6; -fx-border-radius: 5;");
+
+        for (String infoItem : info) {
+            Label infoLabel = new Label(infoItem);
+            infoLabel.setWrapText(true);
+            infoBox.getChildren().add(infoLabel);
+        }
+
+        section.getChildren().addAll(titleLabel, infoBox);
+        return section;
+    }
+
+    private VBox createCaseSpecificInfo(Case selectedCase) {
+        VBox specificInfo = new VBox(5);
+
+        switch (selectedCase.getCaseType()) {
+            case "Fraud":
+                return createInfoSection("Fraud Specific Information",
+                        "Accused: " + (selectedCase.getAccusedName() != null ? selectedCase.getAccusedName() : "Not specified"),
+                        "Transaction Amount: " + (selectedCase.getTransactionAmount() != null ? selectedCase.getTransactionAmount() : "Not specified"),
+                        "Fraud Type: " + (selectedCase.getFraudType() != null ? selectedCase.getFraudType() : "Not specified")
+                );
+            case "Money Laundering":
+                return createInfoSection("Money Laundering Information",
+                        "Total Amount: " + (selectedCase.getTotalAmount() != null ? selectedCase.getTotalAmount() : "Not specified"),
+                        "Fund Sources: " + (selectedCase.getFundSources() != null ? selectedCase.getFundSources() : "Not specified"),
+                        "Urgency Level: " + (selectedCase.getUrgencyLevel() != null ? selectedCase.getUrgencyLevel() : "Not specified")
+                );
+            case "Kidnapping":
+                return createInfoSection("Kidnapping Information",
+                        "Victim Age: " + selectedCase.getVictimAge(),
+                        "Victim Gender: " + (selectedCase.getVictimGender() != null ? selectedCase.getVictimGender() : "Not specified"),
+                        "Last Known Location: " + (selectedCase.getLastLocation() != null ? selectedCase.getLastLocation() : "Not specified"),
+                        "Urgency Level: " + (selectedCase.getUrgencyLevel() != null ? selectedCase.getUrgencyLevel() : "Not specified")
+                );
+            case "Drug Offense":
+                return createInfoSection("Drug Offense Information",
+                        "Drug Type: " + (selectedCase.getDrugType() != null ? selectedCase.getDrugType() : "Not specified"),
+                        "Quantity: " + (selectedCase.getQuantity() != null ? selectedCase.getQuantity() : "Not specified"),
+                        "Location Type: " + (selectedCase.getLocationType() != null ? selectedCase.getLocationType() : "Not specified")
+                );
+            case "Extortion":
+                return createInfoSection("Extortion Information",
+                        "Extortion Type: " + (selectedCase.getExtortionType() != null ? selectedCase.getExtortionType() : "Not specified"),
+                        "Threat Types: " + (selectedCase.getThreatTypes() != null ? selectedCase.getThreatTypes() : "Not specified"),
+                        "Money Amount: " + (selectedCase.getMoneyAmount() != null ? selectedCase.getMoneyAmount() : "Not specified")
+                );
+            case "Robbery":
+                return createInfoSection("Robbery Information",
+                        "Armed/Unarmed: " + (selectedCase.getArmedRobbery() != null ? selectedCase.getArmedRobbery() : "Not specified"),
+                        "Items Stolen: " + (selectedCase.getItemsStolen() != null ? selectedCase.getItemsStolen() : "Not specified"),
+                        "Number of Robbers: " + (selectedCase.getNumberOfRobbers() != null ? selectedCase.getNumberOfRobbers() : "Not specified")
+                );
+            default:
+                return new VBox();
+        }
+    }
+
+    private void showInvestigationNotes(Case selectedCase) {
+        Stage notesStage = new Stage();
+        notesStage.initModality(Modality.APPLICATION_MODAL);
+        notesStage.setTitle("Investigation Notes - Case ID: " + selectedCase.getCaseId());
 
         VBox content = new VBox(15);
         content.setPadding(new Insets(20));
 
-        Label titleLabel = new Label("🔍 Advanced Search");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        Label headerLabel = new Label("📝 Investigation Notes");
+        headerLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        GridPane searchGrid = new GridPane();
-        searchGrid.setHgap(10);
-        searchGrid.setVgap(10);
+        // Notes display area
+        TextArea notesDisplay = new TextArea();
+        notesDisplay.setEditable(false);
+        notesDisplay.setPrefRowCount(10);
 
-        // Search fields
-        TextField caseIdField = new TextField();
-        caseIdField.setPromptText("Case ID");
+        // Load existing notes
+        loadInvestigationNotes(selectedCase, notesDisplay);
 
-        TextField complainantField = new TextField();
-        complainantField.setPromptText("Complainant Name");
+        // New note input
+        Label newNoteLabel = new Label("Add New Note:");
+        newNoteLabel.setStyle("-fx-font-weight: bold;");
 
-        DatePicker fromDatePicker = new DatePicker();
-        DatePicker toDatePicker = new DatePicker();
+        TextField investigatorField = new TextField();
+        investigatorField.setPromptText("Investigator Name");
 
-        ComboBox<String> typeCombo = new ComboBox<>();
-        typeCombo.getItems().addAll("All Types", "Fraud", "Money Laundering", "Kidnapping",
-                "Drug Offense", "Extortion", "Robbery");
-        typeCombo.setValue("All Types");
+        TextArea newNoteArea = new TextArea();
+        newNoteArea.setPromptText("Enter investigation note...");
+        newNoteArea.setPrefRowCount(4);
+
+        Button saveNoteBtn = new Button("💾 Save Note");
+        saveNoteBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+        saveNoteBtn.setOnAction(e -> {
+            if (!investigatorField.getText().trim().isEmpty() && !newNoteArea.getText().trim().isEmpty()) {
+                boolean saved = DatabaseHelper.saveInvestigationNotes(
+                        selectedCase.getCaseId(),
+                        selectedCase.getCaseType().toLowerCase().replace(" ", "_") + "_reports",
+                        investigatorField.getText().trim(),
+                        newNoteArea.getText().trim()
+                );
+
+                if (saved) {
+                    newNoteArea.clear();
+                    investigatorField.clear();
+                    loadInvestigationNotes(selectedCase, notesDisplay);
+                    showInfo("Note saved successfully!");
+                } else {
+                    showError("Failed to save note!");
+                }
+            } else {
+                showError("Please fill in both investigator name and note!");
+            }
+        });
+
+        Button closeBtn = new Button("Close");
+        closeBtn.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: white;");
+        closeBtn.setOnAction(e -> notesStage.close());
+
+        HBox buttonBox = new HBox(10);
+        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.getChildren().addAll(saveNoteBtn, closeBtn);
+
+        content.getChildren().addAll(headerLabel, new Label("Existing Notes:"), notesDisplay,
+                new Separator(), newNoteLabel, investigatorField, newNoteArea, buttonBox);
+
+        ScrollPane scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+
+        Scene scene = new Scene(scrollPane, 600, 600);
+        notesStage.setScene(scene);
+        notesStage.show();
+    }
+
+    private void loadInvestigationNotes(Case selectedCase, TextArea notesDisplay) {
+        try {
+            ResultSet rs = DatabaseHelper.getInvestigationNotes(
+                    selectedCase.getCaseId(),
+                    selectedCase.getCaseType().toLowerCase().replace(" ", "_") + "_reports"
+            );
+
+            StringBuilder notes = new StringBuilder();
+            while (rs != null && rs.next()) {
+                notes.append("=== ").append(rs.getString("investigator_name")).append(" ===\n");
+                notes.append("Date: ").append(rs.getString("created_date")).append("\n");
+                notes.append(rs.getString("notes")).append("\n\n");
+            }
+
+            if (notes.length() == 0) {
+                notes.append("No investigation notes found for this case.");
+            }
+
+            notesDisplay.setText(notes.toString());
+
+            if (rs != null) rs.close();
+        } catch (SQLException e) {
+            showError("Error loading investigation notes: " + e.getMessage());
+        }
+    }
+
+    private void showEvidenceManagement(Case selectedCase) {
+        Stage evidenceStage = new Stage();
+        evidenceStage.initModality(Modality.APPLICATION_MODAL);
+        evidenceStage.setTitle("Evidence Management - Case ID: " + selectedCase.getCaseId());
+
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(20));
+
+        Label headerLabel = new Label("🔍 Evidence Management");
+        headerLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+        // Evidence list
+        ListView<String> evidenceList = new ListView<>();
+        evidenceList.setPrefHeight(200);
+        loadCaseEvidence(selectedCase, evidenceList);
+
+        // Add evidence form
+        Label addEvidenceLabel = new Label("Add New Evidence:");
+        addEvidenceLabel.setStyle("-fx-font-weight: bold;");
+
+        GridPane evidenceForm = new GridPane();
+        evidenceForm.setHgap(10);
+        evidenceForm.setVgap(10);
+
+        TextField evidenceTypeField = new TextField();
+        evidenceTypeField.setPromptText("Evidence Type (e.g., Document, Video, Photo)");
+
+        TextArea descriptionArea = new TextArea();
+        descriptionArea.setPromptText("Evidence Description");
+        descriptionArea.setPrefRowCount(3);
+
+        TextField filePathField = new TextField();
+        filePathField.setPromptText("File Path (optional)");
+
+        TextField collectedByField = new TextField();
+        collectedByField.setPromptText("Collected By");
+
+        TextArea custodyArea = new TextArea();
+        custodyArea.setPromptText("Chain of Custody Details");
+        custodyArea.setPrefRowCount(2);
+
+        evidenceForm.add(new Label("Evidence Type:"), 0, 0);
+        evidenceForm.add(evidenceTypeField, 1, 0);
+        evidenceForm.add(new Label("Description:"), 0, 1);
+        evidenceForm.add(descriptionArea, 1, 1);
+        evidenceForm.add(new Label("File Path:"), 0, 2);
+        evidenceForm.add(filePathField, 1, 2);
+        evidenceForm.add(new Label("Collected By:"), 0, 3);
+        evidenceForm.add(collectedByField, 1, 3);
+        evidenceForm.add(new Label("Chain of Custody:"), 0, 4);
+        evidenceForm.add(custodyArea, 1, 4);
+
+        Button addEvidenceBtn = new Button("📎 Add Evidence");
+        addEvidenceBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+        addEvidenceBtn.setOnAction(e -> {
+            if (!evidenceTypeField.getText().trim().isEmpty() &&
+                    !descriptionArea.getText().trim().isEmpty() &&
+                    !collectedByField.getText().trim().isEmpty()) {
+
+                boolean added = DatabaseHelper.addEvidence(
+                        selectedCase.getCaseId(),
+                        selectedCase.getCaseType().toLowerCase().replace(" ", "_") + "_reports",
+                        evidenceTypeField.getText().trim(),
+                        descriptionArea.getText().trim(),
+                        filePathField.getText().trim(),
+                        collectedByField.getText().trim(),
+                        custodyArea.getText().trim()
+                );
+
+                if (added) {
+                    evidenceTypeField.clear();
+                    descriptionArea.clear();
+                    filePathField.clear();
+                    collectedByField.clear();
+                    custodyArea.clear();
+                    loadCaseEvidence(selectedCase, evidenceList);
+                    showInfo("Evidence added successfully!");
+                } else {
+                    showError("Failed to add evidence!");
+                }
+            } else {
+                showError("Please fill in all required fields!");
+            }
+        });
+
+        Button closeBtn = new Button("Close");
+        closeBtn.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: white;");
+        closeBtn.setOnAction(e -> evidenceStage.close());
+
+        HBox buttonBox = new HBox(10);
+        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.getChildren().addAll(addEvidenceBtn, closeBtn);
+
+        content.getChildren().addAll(headerLabel, new Label("Current Evidence:"), evidenceList,
+                new Separator(), addEvidenceLabel, evidenceForm, buttonBox);
+
+        ScrollPane scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+
+        Scene scene = new Scene(scrollPane, 700, 700);
+        evidenceStage.setScene(scene);
+        evidenceStage.show();
+    }
+
+    private void loadCaseEvidence(Case selectedCase, ListView<String> evidenceList) {
+        ObservableList<String> evidence = FXCollections.observableArrayList();
+
+        try {
+            ResultSet rs = DatabaseHelper.getCaseEvidence(
+                    selectedCase.getCaseId(),
+                    selectedCase.getCaseType().toLowerCase().replace(" ", "_") + "_reports"
+            );
+
+            while (rs != null && rs.next()) {
+                String evidenceItem = String.format("[%s] %s - %s\nCollected by: %s on %s",
+                        rs.getString("evidence_type"),
+                        rs.getString("evidence_description"),
+                        rs.getString("file_path") != null ? rs.getString("file_path") : "No file",
+                        rs.getString("collected_by"),
+                        rs.getString("collected_date")
+                );
+                evidence.add(evidenceItem);
+            }
+
+            if (evidence.isEmpty()) {
+                evidence.add("No evidence recorded for this case yet.");
+            }
+
+            evidenceList.setItems(evidence);
+
+            if (rs != null) rs.close();
+        } catch (SQLException e) {
+            showError("Error loading case evidence: " + e.getMessage());
+        }
+    }
+
+    private void updateCaseStatus(Case selectedCase) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Update Case Status");
+        alert.setHeaderText("Update status for Case ID: " + selectedCase.getCaseId());
 
         ComboBox<String> statusCombo = new ComboBox<>();
-        statusCombo.getItems().addAll("All Status", "approved", "in_progress", "solved", "closed");
-        statusCombo.setValue("All Status");
+        statusCombo.getItems().addAll("approved", "in_progress", "solved", "closed");
+        statusCombo.setValue(selectedCase.getStatus());
 
-        TextField locationField = new TextField();
-        locationField.setPromptText("Location");
+        alert.getDialogPane().setContent(new VBox(10, new Label("Select new status:"), statusCombo));
 
-        // Add to grid
-        searchGrid.add(new Label("Case ID:"), 0, 0);
-        searchGrid.add(caseIdField, 1, 0);
-        searchGrid.add(new Label("Complainant:"), 0, 1);
-        searchGrid.add(complainantField, 1, 1);
-        searchGrid.add(new Label("From Date:"), 0, 2);
-        searchGrid.add(fromDatePicker, 1, 2);
-        searchGrid.add(new Label("To Date:"), 0, 3);
-        searchGrid.add(toDatePicker, 1, 3);
-        searchGrid.add(new Label("Case Type:"), 0, 4);
-        searchGrid.add(typeCombo, 1, 4);
-        searchGrid.add(new Label("Status:"), 0, 5);
-        searchGrid.add(statusCombo, 1, 5);
-        searchGrid.add(new Label("Location:"), 0, 6);
-        searchGrid.add(locationField, 1, 6);
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            String newStatus = statusCombo.getValue();
+            boolean updated = false;
 
-        HBox buttons = new HBox(10);
-        buttons.setAlignment(Pos.CENTER);
-
-        Button searchBtn = new Button("🔍 Search");
-        Button clearBtn = new Button("🗑️ Clear");
-        Button closeBtn = new Button("❌ Close");
-
-        searchBtn.setOnAction(e -> {
-            // Perform search based on criteria
-            performAdvancedSearch(caseIdField.getText(), complainantField.getText(),
-                    fromDatePicker.getValue(), toDatePicker.getValue(),
-                    typeCombo.getValue(), statusCombo.getValue(),
-                    locationField.getText());
-            dialog.close();
-        });
-
-        clearBtn.setOnAction(e -> {
-            caseIdField.clear();
-            complainantField.clear();
-            fromDatePicker.setValue(null);
-            toDatePicker.setValue(null);
-            typeCombo.setValue("All Types");
-            statusCombo.setValue("All Status");
-            locationField.clear();
-        });
-
-        closeBtn.setOnAction(e -> dialog.close());
-
-        buttons.getChildren().addAll(searchBtn, clearBtn, closeBtn);
-        content.getChildren().addAll(titleLabel, searchGrid, buttons);
-
-        Scene scene = new Scene(content, 400, 400);
-        dialog.setScene(scene);
-        dialog.show();
-    }
-
-    private void performAdvancedSearch(String caseId, String complainant,
-                                       java.time.LocalDate fromDate, java.time.LocalDate toDate,
-                                       String type, String status, String location) {
-        ObservableList<CaseItem> searchResults = FXCollections.observableArrayList();
-
-        for (CaseItem caseItem : caseData) {
-            boolean matches = true;
-
-            // Apply search filters
-            if (!caseId.isEmpty() && !String.valueOf(caseItem.getId()).contains(caseId)) {
-                matches = false;
+            // Update status based on case type
+            switch (selectedCase.getCaseType()) {
+                case "Fraud":
+                    updated = DatabaseHelper.updateFraudReportStatus(selectedCase.getCaseId(), newStatus);
+                    break;
+                case "Money Laundering":
+                    updated = DatabaseHelper.updateMoneyLaunderingReportStatus(selectedCase.getCaseId(), newStatus);
+                    break;
+                case "Kidnapping":
+                    updated = DatabaseHelper.updateKidnappingReportStatus(selectedCase.getCaseId(), newStatus);
+                    break;
+                case "Drug Offense":
+                    updated = DatabaseHelper.updateDrugOffenseReportStatus(selectedCase.getCaseId(), newStatus);
+                    break;
+                case "Extortion":
+                    updated = DatabaseHelper.updateExtortionReportStatus(selectedCase.getCaseId(), newStatus);
+                    break;
+                case "Robbery":
+                    updated = DatabaseHelper.updateRobberyReportStatus(selectedCase.getCaseId(), newStatus);
+                    break;
             }
 
-            if (!complainant.isEmpty() && !caseItem.getComplainantName().toLowerCase()
-                    .contains(complainant.toLowerCase())) {
-                matches = false;
-            }
-
-            if (!"All Types".equals(type) && !caseItem.getType().equals(type)) {
-                matches = false;
-            }
-
-            if (!"All Status".equals(status) && !caseItem.getStatus().equals(status)) {
-                matches = false;
-            }
-
-            if (!location.isEmpty() && !caseItem.getLocation().toLowerCase()
-                    .contains(location.toLowerCase())) {
-                matches = false;
-            }
-
-            if (matches) {
-                searchResults.add(caseItem);
+            if (updated) {
+                selectedCase.setStatus(newStatus);
+                caseTable.refresh();
+                updateStatistics();
+                showInfo("Case status updated successfully!");
+            } else {
+                showError("Failed to update case status!");
             }
         }
-
-        caseTable.setItems(searchResults);
-        showAlert("Search completed. Found " + searchResults.size() + " matching cases.",
-                Alert.AlertType.INFORMATION);
     }
 
-    private void showAlert(String message, Alert.AlertType type) {
-        Alert alert = new Alert(type);
-        alert.setTitle("Investigator Dashboard");
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showInfo(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Information");
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
     }
 
     public static void main(String[] args) {
-        // Initialize database
-        DatabaseHelper.initializeDatabase();
         launch(args);
     }
 
-    // Inner class for Case Item
-    public static class CaseItem {
-        private final SimpleIntegerProperty id;
-        private final SimpleStringProperty type;
-        private final SimpleStringProperty complainantName;
-        private final SimpleStringProperty incidentDate;
-        private final SimpleStringProperty location;
-        private final SimpleStringProperty status;
-        private final SimpleStringProperty priority;
-        private final ResultSet resultSet;
+    // Case model class
+    public static class Case {
+        private int caseId;
+        private String caseType;
+        private String complainantName;
+        private String complainantPhone;
+        private String location;
+        private String incidentDate;
+        private String incidentTime;
+        private String status;
+        private String reportDate;
+        private String description;
+        private String priority;
 
-        public CaseItem(int id, String type, String complainantName, String incidentDate,
-                        String location, String status, String priority, ResultSet resultSet) {
-            this.id = new SimpleIntegerProperty(id);
-            this.type = new SimpleStringProperty(type);
-            this.complainantName = new SimpleStringProperty(complainantName);
-            this.incidentDate = new SimpleStringProperty(incidentDate);
-            this.location = new SimpleStringProperty(location);
-            this.status = new SimpleStringProperty(status);
-            this.priority = new SimpleStringProperty(priority);
-            this.resultSet = resultSet;
-        }
+        // Fraud specific fields
+        private String accusedName;
+        private String transactionAmount;
+        private String fraudType;
 
-        // Getters
-        public int getId() { return id.get(); }
-        public String getType() { return type.get(); }
-        public String getComplainantName() { return complainantName.get(); }
-        public String getIncidentDate() { return incidentDate.get(); }
-        public String getLocation() { return location.get(); }
-        public String getStatus() { return status.get(); }
-        public String getPriority() { return priority.get(); }
-        public ResultSet getResultSet() { return resultSet; }
+        // Money Laundering specific fields
+        private String totalAmount;
+        private String fundSources;
+        private String urgencyLevel;
 
-        // Setters
-        public void setStatus(String status) { this.status.set(status); }
-        public void setPriority(String priority) { this.priority.set(priority); }
+        // Kidnapping specific fields
+        private int victimAge;
+        private String victimGender;
+        private String lastLocation;
 
-        // Property getters for TableView
-        public SimpleIntegerProperty idProperty() { return id; }
-        public SimpleStringProperty typeProperty() { return type; }
-        public SimpleStringProperty complainantNameProperty() { return complainantName; }
-        public SimpleStringProperty incidentDateProperty() { return incidentDate; }
-        public SimpleStringProperty locationProperty() { return location; }
-        public SimpleStringProperty statusProperty() { return status; }
-        public SimpleStringProperty priorityProperty() { return priority; }
+        // Drug Offense specific fields
+        private String drugType;
+        private String quantity;
+        private String locationType;
+
+        // Extortion specific fields
+        private String extortionType;
+        private String threatTypes;
+        private String moneyAmount;
+
+        // Robbery specific fields
+        private String armedRobbery;
+        private String itemsStolen;
+        private String numberOfRobbers;
+
+        // Constructors
+        public Case() {}
+
+        // Getters and Setters
+        public int getCaseId() { return caseId; }
+        public void setCaseId(int caseId) { this.caseId = caseId; }
+
+        public String getCaseType() { return caseType; }
+        public void setCaseType(String caseType) { this.caseType = caseType; }
+
+        public String getComplainantName() { return complainantName; }
+        public void setComplainantName(String complainantName) { this.complainantName = complainantName; }
+
+        public String getComplainantPhone() { return complainantPhone; }
+        public void setComplainantPhone(String complainantPhone) { this.complainantPhone = complainantPhone; }
+
+        public String getLocation() { return location; }
+        public void setLocation(String location) { this.location = location; }
+
+        public String getIncidentDate() { return incidentDate; }
+        public void setIncidentDate(String incidentDate) { this.incidentDate = incidentDate; }
+
+        public String getIncidentTime() { return incidentTime; }
+        public void setIncidentTime(String incidentTime) { this.incidentTime = incidentTime; }
+
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+
+        public String getReportDate() { return reportDate; }
+        public void setReportDate(String reportDate) { this.reportDate = reportDate; }
+
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
+
+        public String getPriority() { return priority; }
+        public void setPriority(String priority) { this.priority = priority; }
+
+        // Fraud specific getters/setters
+        public String getAccusedName() { return accusedName; }
+        public void setAccusedName(String accusedName) { this.accusedName = accusedName; }
+
+        public String getTransactionAmount() { return transactionAmount; }
+        public void setTransactionAmount(String transactionAmount) { this.transactionAmount = transactionAmount; }
+
+        public String getFraudType() { return fraudType; }
+        public void setFraudType(String fraudType) { this.fraudType = fraudType; }
+
+        // Money Laundering specific getters/setters
+        public String getTotalAmount() { return totalAmount; }
+        public void setTotalAmount(String totalAmount) { this.totalAmount = totalAmount; }
+
+        public String getFundSources() { return fundSources; }
+        public void setFundSources(String fundSources) { this.fundSources = fundSources; }
+
+        public String getUrgencyLevel() { return urgencyLevel; }
+        public void setUrgencyLevel(String urgencyLevel) { this.urgencyLevel = urgencyLevel; }
+
+        // Kidnapping specific getters/setters
+        public int getVictimAge() { return victimAge; }
+        public void setVictimAge(int victimAge) { this.victimAge = victimAge; }
+
+        public String getVictimGender() { return victimGender; }
+        public void setVictimGender(String victimGender) { this.victimGender = victimGender; }
+
+        public String getLastLocation() { return lastLocation; }
+        public void setLastLocation(String lastLocation) { this.lastLocation = lastLocation; }
+
+        // Drug Offense specific getters/setters
+        public String getDrugType() { return drugType; }
+        public void setDrugType(String drugType) { this.drugType = drugType; }
+
+        public String getQuantity() { return quantity; }
+        public void setQuantity(String quantity) { this.quantity = quantity; }
+
+        public String getLocationType() { return locationType; }
+        public void setLocationType(String locationType) { this.locationType = locationType; }
+
+        // Extortion specific getters/setters
+        public String getExtortionType() { return extortionType; }
+        public void setExtortionType(String extortionType) { this.extortionType = extortionType; }
+
+        public String getThreatTypes() { return threatTypes; }
+        public void setThreatTypes(String threatTypes) { this.threatTypes = threatTypes; }
+
+        public String getMoneyAmount() { return moneyAmount; }
+        public void setMoneyAmount(String moneyAmount) { this.moneyAmount = moneyAmount; }
+
+        // Robbery specific getters/setters
+        public String getArmedRobbery() { return armedRobbery; }
+        public void setArmedRobbery(String armedRobbery) { this.armedRobbery = armedRobbery; }
+
+        public String getItemsStolen() { return itemsStolen; }
+        public void setItemsStolen(String itemsStolen) { this.itemsStolen = itemsStolen; }
+
+        public String getNumberOfRobbers() { return numberOfRobbers; }
+        public void setNumberOfRobbers(String numberOfRobbers) { this.numberOfRobbers = numberOfRobbers; }
     }
 }
