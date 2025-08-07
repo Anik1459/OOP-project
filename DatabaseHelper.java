@@ -1,4 +1,4 @@
-package src.main;
+package org.example.java;
 
 import java.sql.*;
 
@@ -246,7 +246,7 @@ public class DatabaseHelper {
                 "complainant_phone TEXT NOT NULL," +
                 "nid_bc TEXT," +
                 "location TEXT," +
-                "date_of_incident TEXT NOT NULL," +
+                "incident_date TEXT NOT NULL," +
                 "description_of_incident TEXT," +
                 "accused_name TEXT," +
                 "accused_phone TEXT," +
@@ -285,7 +285,7 @@ public class DatabaseHelper {
     ) {
         String sql = "INSERT INTO fraud_reports (" +
                 "complainant_name, father_name, mother_name, complainant_phone, nid_bc, " +
-                "location, date_of_incident, description_of_incident, " +
+                "location, incident_date, description_of_incident, " +
                 "accused_name, accused_phone, accused_email, accused_address, " +
                 "type_of_fraud, mode_of_communication, transaction_amount, transaction_method, " +
                 "supporting_documents, has_accused_promised_to_return, action_requested_from_police" +
