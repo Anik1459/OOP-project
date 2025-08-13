@@ -1,4 +1,4 @@
-package src.main;
+package org.example.java;
 
 import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
@@ -68,6 +68,37 @@ public class AdminDashboard extends Application {
         header.setPadding(new Insets(20));
         header.setStyle("-fx-background-color: #2c3e50; -fx-text-fill: white;");
 
+        // Header row with back button and title
+        HBox headerRow = new HBox(15);
+        headerRow.setAlignment(Pos.CENTER_LEFT);
+
+        // Back button
+        Button backButton = new Button("⬅ Back");
+        backButton.setFont(Font.font("System", FontWeight.BOLD, 14));
+        backButton.setStyle("-fx-background-color: #667eea; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 8 15; -fx-cursor: hand;");
+        
+        // Add hover effects
+        backButton.setOnMouseEntered(e -> {
+            backButton.setStyle("-fx-background-color: #5a6fd8; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 8 15; -fx-cursor: hand;");
+        });
+        backButton.setOnMouseExited(e -> {
+            backButton.setStyle("-fx-background-color: #667eea; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 8 15; -fx-cursor: hand;");
+        });
+        
+        backButton.setOnAction(e -> {
+            try {
+                RoleSelection roleSelection = new RoleSelection();
+                Stage currentStage = (Stage) backButton.getScene().getWindow();
+                roleSelection.start(currentStage);
+            } catch (Exception ex) {
+                System.err.println("Error navigating to RoleSelection: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        });
+
+        // Title and subtitle container
+        VBox titleContainer = new VBox(5);
+        
         Label titleLabel = new Label("Police Admin Dashboard");
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         titleLabel.setStyle("-fx-text-fill: white;");
@@ -76,10 +107,13 @@ public class AdminDashboard extends Application {
         subtitleLabel.setFont(Font.font("Arial", 14));
         subtitleLabel.setStyle("-fx-text-fill: #bdc3c7;");
 
+        titleContainer.getChildren().addAll(titleLabel, subtitleLabel);
+        headerRow.getChildren().addAll(backButton, titleContainer);
+
         // Statistics panel
         HBox statsBox = createStatsPanel();
 
-        header.getChildren().addAll(titleLabel, subtitleLabel, statsBox);
+        header.getChildren().addAll(headerRow, statsBox);
         return header;
     }
 
