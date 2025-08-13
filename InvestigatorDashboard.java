@@ -79,9 +79,39 @@ public class InvestigatorDashboard extends Application {
         topSection.setPadding(new Insets(20));
         topSection.setStyle("-fx-background-color: #2c3e50;");
 
-        // Header
+        // Header row with back button and title
+        HBox headerRow = new HBox(15);
+        headerRow.setAlignment(Pos.CENTER_LEFT);
+
+        // Back button
+        Button backButton = new Button("⬅ Back");
+        backButton.setFont(Font.font("System", FontWeight.BOLD, 14));
+        backButton.setStyle("-fx-background-color: #667eea; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 8 15; -fx-cursor: hand;");
+        
+        // Add hover effects
+        backButton.setOnMouseEntered(e -> {
+            backButton.setStyle("-fx-background-color: #5a6fd8; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 8 15; -fx-cursor: hand;");
+        });
+        backButton.setOnMouseExited(e -> {
+            backButton.setStyle("-fx-background-color: #667eea; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 8 15; -fx-cursor: hand;");
+        });
+        
+        backButton.setOnAction(e -> {
+            try {
+                RoleSelection roleSelection = new RoleSelection();
+                Stage currentStage = (Stage) backButton.getScene().getWindow();
+                roleSelection.start(currentStage);
+            } catch (Exception ex) {
+                System.err.println("Error navigating to RoleSelection: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        });
+
+        // Header label
         Label headerLabel = new Label("🔍 POLICE INVESTIGATION DASHBOARD");
         headerLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;");
+
+        headerRow.getChildren().addAll(backButton, headerLabel);
 
         // Controls row
         HBox controlsRow = new HBox(15);
@@ -116,7 +146,7 @@ public class InvestigatorDashboard extends Application {
 
         controlsRow.getChildren().addAll(filterLabel, caseTypeFilter, searchLabel, searchField, refreshBtn);
 
-        topSection.getChildren().addAll(headerLabel, controlsRow);
+        topSection.getChildren().addAll(headerRow, controlsRow);
         return topSection;
     }
 
