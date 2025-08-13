@@ -1,4 +1,4 @@
-package src.main; // Change from com.example.oopproject
+package org.example.java; // Change from com.example.oopproject
 
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
@@ -20,10 +20,10 @@ import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.util.Duration;
 
-import static src.main.PasswordChange.showAlert;
+import static org.example.java.PasswordChange.showAlert;
 
 // Import the static method from PasswordChange in the correct package
- // Change the import
+// Change the import
 
 public class Login extends Application {
 
@@ -33,13 +33,17 @@ public class Login extends Application {
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("🇧🇩 Login - Bangladesh Portal");
-        primaryStage.setScene(createLoginScene(primaryStage));
+        primaryStage.setScene(createLoginScene(primaryStage, "Complainant"));
         primaryStage.setMinWidth(350);
         primaryStage.setMinHeight(500);
         primaryStage.show();
     }
 
     public Scene createLoginScene(Stage primaryStage) {
+        return createLoginScene(primaryStage, "Complainant");
+    }
+
+    public Scene createLoginScene(Stage primaryStage, String userRole) {
         VBox root = new VBox(20);
         root.setPadding(new Insets(40));
         root.setAlignment(Pos.CENTER);
@@ -66,7 +70,7 @@ public class Login extends Application {
         welcomeLabel.setFont(Font.font("Arial", FontWeight.BOLD, 30));
         welcomeLabel.setTextFill(Color.WHITE);
 
-        Label subtitleLabel = new Label("Please log in to your account");
+        Label subtitleLabel = new Label("Please log in to your " + userRole + " account");
         subtitleLabel.setFont(Font.font("Arial", FontWeight.MEDIUM, 16));
         subtitleLabel.setTextFill(Color.LIGHTGRAY);
 
@@ -95,7 +99,11 @@ public class Login extends Application {
         forgotPassword.setStyle("-fx-cursor: hand;");
 
         forgotPassword.setOnAction(e -> {
-            new PasswordChange().start(primaryStage);
+            if (userRole.equals("Admin") || userRole.equals("Investigating Officer")) {
+                showAlert(Alert.AlertType.WARNING, "❌ Access Denied!\n\nForgot Password feature is not available for " + userRole + " accounts.\nPlease contact your system administrator for assistance.");
+            } else {
+                new PasswordChange().start(primaryStage);
+            }
         });
 
         Button loginButton = createStyledButton("🔓 Sign In", "#28a745", "#218838");
@@ -113,6 +121,19 @@ public class Login extends Application {
                         "-fx-cursor: hand;"
         );
 
+        // Disable appearance for Admin and Investigating Officer
+        if (userRole.equals("Admin") || userRole.equals("Investigating Officer")) {
+            forgotPassword.setStyle("-fx-text-fill: #888888; -fx-cursor: default;");
+            signUpButton.setStyle(
+                    "-fx-background-color: transparent;" +
+                            "-fx-text-fill: #888888;" +
+                            "-fx-underline: false;" +
+                            "-fx-font-weight: normal;" +
+                            "-fx-font-size: var(20);" +
+                            "-fx-cursor: default;"
+            );
+        }
+
         loginButton.setOnAction(e -> {
             String phone = phoneField.getText().trim();
             String password = passwordField.getText();
@@ -121,19 +142,19 @@ public class Login extends Application {
                 showAlert(Alert.AlertType.ERROR, "❗ Phone and password must not be empty.");
                 return;
             }
-            else if(password.equals("I am Admin"))
+            else if(password.equals("I am Admin") && phone.equals(123456))
             {
                 //Switch to Admin Dashboard
                 showAlert(Alert.AlertType.INFORMATION, "🔑 Admin Access Granted!");
 
-                 new AdminDashboard().start(primaryStage);
+                new AdminDashboard().start(primaryStage);
             }
-            else if(password.equals("I am Investigation Officer"))
+            else if(password.equals("I am Investigation Officer") && phone.equals(123456))
             {
                 //Switch to Officer Dashboard
                 showAlert(Alert.AlertType.INFORMATION, "👮 Officer Access Granted!");
 
-               new InvestigatorDashboard().start(primaryStage);
+                new InvestigatorDashboard().start(primaryStage);
             }
             else {
                 boolean success = DatabaseHelper.validateLogin(phone, password);
@@ -158,9 +179,13 @@ public class Login extends Application {
         });
 
         signUpButton.setOnAction(e -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Redirect to Sign Up scene...");
-            alert.showAndWait();
-            new SignUp().start(primaryStage);
+            if (userRole.equals("Admin") || userRole.equals("Investigating Officer")) {
+                showAlert(Alert.AlertType.WARNING, "❌ Access Denied!\n\nSign Up feature is not available for " + userRole + " accounts.\nOnly authorized personnel can create " + userRole + " accounts.\nPlease contact your system administrator.");
+            } else {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION, "Redirect to Sign Up scene...");
+                alert.showAndWait();
+                new SignUp().start(primaryStage);
+            }
         });
 
         HBox bottomBox = new HBox(5, signUpPrompt, signUpButton);
