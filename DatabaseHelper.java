@@ -438,6 +438,7 @@ public class DatabaseHelper {
                 "accused_address TEXT," +
 
                 // Victim Information
+                "victim_name TEXT NOT NULL," +
                 "victim_age INTEGER NOT NULL," +
                 "victim_gender TEXT NOT NULL," +
                 "victim_height TEXT," +
@@ -505,7 +506,7 @@ public class DatabaseHelper {
             String accusedName, String accusedPhone, String accusedEmail, String accusedAddress,
 
             // Victim information
-            int victimAge, String victimGender, String victimHeight,
+            String victimName, int victimAge, String victimGender, String victimHeight,
             String victimClothing, String victimMarks,
 
             // Last known information
@@ -535,7 +536,7 @@ public class DatabaseHelper {
                 "complainant_name, father_name, mother_name, complainant_phone, location, " +
                 "incident_date, incident_time, description, nid_bc, photo_path, " +
                 "accused_name, accused_phone, accused_email, accused_address, " +
-                "victim_age, victim_gender, victim_height, victim_clothing, victim_marks, " +
+                "victim_name, victim_age, victim_gender, victim_height, victim_clothing, victim_marks, " +
                 "last_location, last_seen_time, last_activity, " +
                 "kidnapper_known, kidnapper_description, relationship, " +
                 "witness_available, witness_details, " +
@@ -543,7 +544,7 @@ public class DatabaseHelper {
                 "ransom_demand, ransom_details, ransom_amount, " +
                 "previous_report, motive_money, motive_revenge, motive_family, " +
                 "motive_political, motive_unknown, motive_other, action_request" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -565,38 +566,39 @@ public class DatabaseHelper {
             pstmt.setString(13, accusedEmail);
             pstmt.setString(14, accusedAddress);
 
-            pstmt.setInt(15, victimAge);
-            pstmt.setString(16, victimGender);
-            pstmt.setString(17, victimHeight);
-            pstmt.setString(18, victimClothing);
-            pstmt.setString(19, victimMarks);
+            pstmt.setString(15, victimName);
+            pstmt.setInt(16, victimAge);
+            pstmt.setString(17, victimGender);
+            pstmt.setString(18, victimHeight);
+            pstmt.setString(19, victimClothing);
+            pstmt.setString(20, victimMarks);
 
-            pstmt.setString(20, lastLocation);
-            pstmt.setString(21, lastSeenTime);
-            pstmt.setString(22, lastActivity);
+            pstmt.setString(21, lastLocation);
+            pstmt.setString(22, lastSeenTime);
+            pstmt.setString(23, lastActivity);
 
-            pstmt.setString(23, kidnapperKnown);
-            pstmt.setString(24, kidnapperDescription);
-            pstmt.setString(25, relationship);
+            pstmt.setString(24, kidnapperKnown);
+            pstmt.setString(25, kidnapperDescription);
+            pstmt.setString(26, relationship);
 
-            pstmt.setString(26, witnessAvailable);
-            pstmt.setString(27, witnessDetails);
+            pstmt.setString(27, witnessAvailable);
+            pstmt.setString(28, witnessDetails);
 
-            pstmt.setString(28, amberAlert);
-            pstmt.setString(29, urgencyLevel);
+            pstmt.setString(29, amberAlert);
+            pstmt.setString(30, urgencyLevel);
 
-            pstmt.setString(30, ransomDemand);
-            pstmt.setString(31, ransomDetails);
-            pstmt.setString(32, ransomAmount);
+            pstmt.setString(31, ransomDemand);
+            pstmt.setString(32, ransomDetails);
+            pstmt.setString(33, ransomAmount);
 
-            pstmt.setString(33, previousReport);
-            pstmt.setInt(34, motiveMoney);
-            pstmt.setInt(35, motiveRevenge);
-            pstmt.setInt(36, motiveFamily);
-            pstmt.setInt(37, motivePolitical);
-            pstmt.setInt(38, motiveUnknown);
-            pstmt.setInt(39, motiveOther);
-            pstmt.setString(40, actionRequest);
+            pstmt.setString(34, previousReport);
+            pstmt.setInt(35, motiveMoney);
+            pstmt.setInt(36, motiveRevenge);
+            pstmt.setInt(37, motiveFamily);
+            pstmt.setInt(38, motivePolitical);
+            pstmt.setInt(39, motiveUnknown);
+            pstmt.setInt(40, motiveOther);
+            pstmt.setString(41, actionRequest);
 
             int result = pstmt.executeUpdate();
             System.out.println("Kidnapping report inserted successfully!");
@@ -1632,6 +1634,21 @@ public class DatabaseHelper {
 
         public int getTotalSolved() {
             return fraudSolved + mlSolved + kidnappingSolved + drugSolved + extortionSolved + robberySolved;
+        }
+
+        // Add this method to DatabaseHelper for Money Laundering reports by phone
+        public static ResultSet getMoneyLaunderingReportsByPhone(String phone) {
+            String sql = "SELECT * FROM money_laundering_reports WHERE complainant_phone = ? ORDER BY report_date DESC";
+            try {
+                Connection conn = DriverManager.getConnection(DB_URL);
+                PreparedStatement pstmt = conn.prepareStatement(sql);
+                pstmt.setString(1, phone);
+                return pstmt.executeQuery();
+            } catch (SQLException e) {
+                System.err.println("Error retrieving money laundering reports: " + e.getMessage());
+                e.printStackTrace();
+                return null;
+            }
         }
     }
 
