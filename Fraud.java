@@ -260,7 +260,7 @@ public class Fraud extends Crime {
                     complainantPhoneField.getText().trim(), // complaintPhone
                     nidBcField.getText().trim(),        // nidBc
                     locationField.getText().trim(),     // location
-                    datePicker.getValue().toString(),   // dateOfIncident
+                    datePicker.getValue() != null ? datePicker.getValue().toString() : "",   // dateOfIncident
                     descriptionArea.getText().trim(),   // descriptionOfIncident
                     accusedName.getText().trim(),       // accusedName
                     accusedPhone.getText().trim(),      // accusedPhone
