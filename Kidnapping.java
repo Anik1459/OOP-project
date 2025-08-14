@@ -18,6 +18,9 @@ public class Kidnapping extends Crime {
     ToggleGroup witnessGroup;
     ToggleGroup kidnapperKnownGroup;
     ToggleGroup genderGroup;
+    
+    // Form fields
+    TextField victimNameField;
 
     public Kidnapping() {
         DatabaseHelper.createKidnappingTableIfNotExists();
@@ -75,6 +78,13 @@ public class Kidnapping extends Crime {
         // 1. Victim Information Section
         Label victimSectionLabel = createSectionLabel("👤 VICTIM INFORMATION");
         formGrid.add(victimSectionLabel, 0, row++, 2, 1);
+
+        // Victim's Name
+        Label nameLabel = createStyledLabel("👤 Victim's Name *:", true);
+        victimNameField = createStyledTextField();
+        victimNameField.setPromptText("Enter victim's full name");
+        formGrid.add(nameLabel, 0, row);
+        formGrid.add(victimNameField, 1, row++);
 
         // Victim's Age
         Label ageLabel = createStyledLabel("🎂 Victim's Age *:", true);
@@ -353,11 +363,12 @@ public class Kidnapping extends Crime {
                 showAlert(Alert.AlertType.ERROR, "Validation Error", "Please fill all required common fields.");
                 return;
             }
-            if (ageField.getText().trim().isEmpty() ||
+            if (victimNameField.getText().trim().isEmpty() ||
+                    ageField.getText().trim().isEmpty() ||
                     genderGroup.getSelectedToggle() == null ||
                     lastLocationField.getText().trim().isEmpty() ||
                     lastSeenTimeField.getText().trim().isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please fill all mandatory kidnapping-specific fields.");
+                showAlert(Alert.AlertType.ERROR, "Validation Error", "Please fill all mandatory kidnapping-specific fields including victim's name.");
                 return;
             }
             showAlert(Alert.AlertType.INFORMATION, "Success", "Kidnapping report submitted successfully! Police will prioritize this case.");
@@ -379,6 +390,7 @@ public class Kidnapping extends Crime {
                     accusedAddress.getText().trim(),
 
                     // Victim Info
+                    victimNameField.getText().trim(), // Victim's name
                     Integer.parseInt(ageField.getText().trim()), // Convert age text to int
                     getSelectedGender(), // You'll implement this to get selected gender string
                     heightField.getText().trim(),
