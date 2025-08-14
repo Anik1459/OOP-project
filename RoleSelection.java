@@ -1,4 +1,4 @@
-package com.example.oopproject;
+package org.example.java;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -98,7 +98,7 @@ public class RoleSelection extends Application{
         header.setBackground(new Background(headerFill));
 
         // Logo
-        Label logo = new Label("⚖️ BD Complaint Hub");
+        Label logo = new Label("Online-Case Reporting System");
         logo.setFont(Font.font("System", FontWeight.BOLD, 36));
         logo.setTextFill(Color.WHITE);
         logo.setEffect(new DropShadow(5, Color.BLACK));
@@ -127,7 +127,7 @@ public class RoleSelection extends Application{
         // Responsive Badge
         Label responsiveBadge = createResponsiveBadge();
 
-        content.getChildren().addAll(roleSection, aboutSection, responsiveBadge);
+        content.getChildren().addAll(roleSection, aboutSection);
         return content;
     }
 
@@ -195,12 +195,12 @@ public class RoleSelection extends Application{
         card.setEffect(new DropShadow(10, Color.web("#000000", 0.3)));
 
         // Add hover and click animations
-        addCardAnimations(card, title.toLowerCase().replace(" ", ""));
+        addCardAnimations(card, title);
 
         return card;
     }
 
-    private void addCardAnimations(Button card, String role) {
+    private void addCardAnimations(Button card, String title) {
         // Hover animations
         card.setOnMouseEntered(e -> {
             ScaleTransition scaleUp = new ScaleTransition(Duration.millis(200), card);
@@ -236,7 +236,7 @@ public class RoleSelection extends Application{
                 backScale.play();
 
                 Login login = new Login();
-                Scene loginScene = login.createLoginScene(primaryStage);
+                Scene loginScene = login.createLoginScene(primaryStage, title);
                 primaryStage.setScene(loginScene);
                 primaryStage.centerOnScreen();
 
@@ -368,12 +368,8 @@ public class RoleSelection extends Application{
                 new CornerRadii(0, 0, 20, 20, false), null);
         footer.setBackground(new Background(footerFill));
 
-        // Footer links
-        Hyperlink contactLink = createFooterLink("🌐 Contact");
-        Hyperlink helpLink = createFooterLink("❓ Help");
-        Hyperlink privacyLink = createFooterLink("🔒 Privacy Policy");
 
-        footer.getChildren().addAll(contactLink, helpLink, privacyLink);
+
         return footer;
     }
 
